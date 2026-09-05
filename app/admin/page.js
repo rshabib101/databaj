@@ -151,6 +151,15 @@ export default function AdminPage() {
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
   const [adminFeedbackInputs, setAdminFeedbackInputs] = useState({});
 
+  // Super Admin Security state (Gmail & Password change)
+  const [adminSecurityModalOpen, setAdminSecurityModalOpen] = useState(false);
+  const [adminEditName, setAdminEditName] = useState('');
+  const [adminEditEmail, setAdminEditEmail] = useState('');
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
+  const [savingAdminSecurity, setSavingAdminSecurity] = useState(false);
+  const [adminSecurityMsg, setAdminSecurityMsg] = useState(null);
+
   // 1. Authenticate Super Admin
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
@@ -163,6 +172,8 @@ export default function AdminPage() {
           router.push('/login');
         } else {
           setCurrentUser(data.user);
+          setAdminEditName(data.user.name || '');
+          setAdminEditEmail(data.user.email || '');
         }
       })
       .catch(() => router.push('/login'))
@@ -518,6 +529,62 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Super Admin Credentials Save Handler
+  const handleSaveAdminSecurity = async (e) => {
+    e.preventDefault();
+    setSavingAdminSecurity(true);
+    setAdminSecurityMsg(null);
+
+    if (adminNewPassword && adminNewPassword.trim().length < 6) {
+      setAdminSecurityMsg({ type: 'error', text: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' });
+      setSavingAdminSecurity(false);
+      return;
+    }
+
+    if (adminNewPassword && adminNewPassword.trim() !== adminConfirmPassword.trim()) {
+      setAdminSecurityMsg({ type: 'error', text: 'নতুন পাসওয়ার্ড এবং কনফার্ম পাসওয়ার্ড মিলছে না।' });
+      setSavingAdminSecurity(false);
+      return;
+    }
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
+      const res = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: adminEditName,
+          email: adminEditEmail,
+          newPassword: adminNewPassword ? adminNewPassword.trim() : undefined,
+          confirmPassword: adminConfirmPassword ? adminConfirmPassword.trim() : undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setAdminSecurityMsg({ type: 'success', text: data.message });
+        if (data.token && typeof window !== 'undefined') {
+          localStorage.setItem('databaj_token', data.token);
+        }
+        if (data.admin) {
+          setCurrentUser(data.admin);
+        }
+        setAdminNewPassword('');
+        setAdminConfirmPassword('');
+      } else {
+        setAdminSecurityMsg({ type: 'error', text: data.message || 'আপডেট ব্যর্থ হয়েছে' });
+      }
+    } catch (err) {
+      console.error(err);
+      setAdminSecurityMsg({ type: 'error', text: 'সার্ভার এরর হয়েছে।' });
+    } finally {
+      setSavingAdminSecurity(false);
     }
   };
 
@@ -1352,13 +1419,29 @@ export default function AdminPage() {
               </div>
             )}
 
-            <button
-              onClick={handleLogout}
-              title="লগআউট"
-              className="p-2 rounded-xl bg-zinc-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => {
+                  setAdminEditName(currentUser?.name || '');
+                  setAdminEditEmail(currentUser?.email || '');
+                  setAdminNewPassword('');
+                  setAdminConfirmPassword('');
+                  setAdminSecurityMsg(null);
+                  setAdminSecurityModalOpen(true);
+                }}
+                title="লগইন জিমেইল ও পাসওয়ার্ড পরিবর্তন"
+                className="p-2 rounded-xl bg-zinc-800 hover:bg-amber-500/20 text-zinc-400 hover:text-amber-400 transition-colors cursor-pointer"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleLogout}
+                title="লগআউট"
+                className="p-2 rounded-xl bg-zinc-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -1413,6 +1496,22 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setAdminEditName(currentUser?.name || '');
+                setAdminEditEmail(currentUser?.email || '');
+                setAdminNewPassword('');
+                setAdminConfirmPassword('');
+                setAdminSecurityMsg(null);
+                setAdminSecurityModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold transition cursor-pointer"
+              title="জিমেইল ও পাসওয়ার্ড পরিবর্তন করুন"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>লগইন সিকিউরিটি</span>
+            </button>
+
             <span className="hidden sm:inline-block text-[11px] font-mono text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
               Super Admin: {currentUser?.name}
             </span>
@@ -2329,6 +2428,52 @@ export default function AdminPage() {
               >
                 <span>সার্ভিস পেজে লাইভ দেখুন</span>
               </a>
+            </div>
+
+            {/* Super Admin Login Credentials Quick Card */}
+            <div className="bg-gradient-to-r from-amber-500/10 via-zinc-950 to-zinc-950 p-6 rounded-3xl border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <KeyRound className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase font-mono font-bold tracking-wider text-amber-400">
+                      Super Admin Security
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Active Account
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-white mt-1">সুপার অ্যাডমিন লগইন ক্রেডেনশিয়ালস</h3>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400 mt-1.5 font-mono">
+                    <span className="flex items-center gap-1.5 text-zinc-300">
+                      <Mail className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{currentUser?.email || 'admin@databaj.com'}</span>
+                    </span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-400">রোল: Super Admin</span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-400">নাম: {currentUser?.name || 'Habib'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminEditName(currentUser?.name || '');
+                  setAdminEditEmail(currentUser?.email || '');
+                  setAdminNewPassword('');
+                  setAdminConfirmPassword('');
+                  setAdminSecurityMsg(null);
+                  setAdminSecurityModalOpen(true);
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black transition-all shadow-lg shadow-amber-500/20 cursor-pointer flex items-center gap-2 shrink-0 self-start sm:self-auto"
+              >
+                <KeyRound className="w-4 h-4" />
+                <span>জিমেইল ও পাসওয়ার্ড পরিবর্তন করুন</span>
+              </button>
             </div>
 
             {settingsSuccessMsg && (
@@ -3443,6 +3588,160 @@ export default function AdminPage() {
                   className="px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black transition-all shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-50"
                 >
                   {svcSaving ? 'সংরক্ষণ হচ্ছে...' : 'সার্ভিস সেভ করুন'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Super Admin Security Modal (Change Gmail & Password) */}
+      {adminSecurityModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-md p-6 relative shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">অ্যাডমিন সিকিউরিটি সেটিংস</h3>
+                  <p className="text-[11px] text-zinc-400">লগইন জিমেইল ও পাসওয়ার্ড পরিবর্তন করুন</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminSecurityModalOpen(false)}
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Alert Message */}
+            {adminSecurityMsg && (
+              <div
+                className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2.5 ${
+                  adminSecurityMsg.type === 'success'
+                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+                    : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+                }`}
+              >
+                {adminSecurityMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <X className="w-4 h-4 shrink-0" />
+                )}
+                <span>{adminSecurityMsg.text}</span>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSaveAdminSecurity} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  অ্যাডমিনের নাম (Full Name)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={adminEditName}
+                  onChange={(e) => setAdminEditName(e.target.value)}
+                  placeholder="Super Admin Name"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  সুপার অ্যাডমিন জিমেইল / ইমেইল (Login Gmail) *
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={adminEditEmail}
+                    onChange={(e) => setAdminEditEmail(e.target.value)}
+                    placeholder="admin@example.com"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                  />
+                </div>
+                <span className="text-[10px] text-zinc-500 mt-1 block">
+                  ভবিষ্যতে এই জিমেইল দিয়ে অ্যাডমিন প্যানেলে লগইন করতে হবে।
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-900">
+                <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-2 font-mono">
+                  পাসওয়ার্ড পরিবর্তন (Password Update)
+                </span>
+                <p className="text-[11px] text-zinc-400 mb-3">
+                  পাসওয়ার্ড পরিবর্তন করতে না চাইলে এই ঘরগুলো ফাঁকা রাখুন।
+                </p>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                      নতুন পাসওয়ার্ড (New Password)
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={adminNewPassword}
+                        onChange={(e) => setAdminNewPassword(e.target.value)}
+                        placeholder="কমপক্ষে ৬ অক্ষরের নতুন পাসওয়ার্ড"
+                        minLength={6}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                      কনফার্ম নতুন পাসওয়ার্ড (Confirm Password)
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={adminConfirmPassword}
+                        onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                        placeholder="একই পাসওয়ার্ড পুনরায় লিখুন"
+                        minLength={6}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-900">
+                <button
+                  type="button"
+                  onClick={() => setAdminSecurityModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer"
+                >
+                  বন্ধ করুন
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingAdminSecurity}
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black transition-all shadow-md shadow-amber-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {savingAdminSecurity ? (
+                    <>
+                      <Sparkles className="w-4 h-4 animate-spin" />
+                      <span>আপডেট হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>পরিবর্তন সংরক্ষণ করুন</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

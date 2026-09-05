@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, ArrowRight, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,12 +50,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillCredentials = (userEmail, userPass) => {
-    setEmail(userEmail);
-    setPassword(userPass);
-    setError(null);
   };
 
   return (
@@ -141,30 +135,6 @@ export default function LoginPage() {
             >
               নতুন কোম্পানি রেজিস্টার করুন
             </Link>
-          </div>
-
-          {/* Fast Credentials Helper for Testing */}
-          <div className="p-3 bg-zinc-900/50 rounded-2xl border border-zinc-800/80 text-[11px] text-zinc-400 space-y-1.5">
-            <span className="font-semibold text-zinc-300 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              টেস্ট করতে অটো-ফিল করুন:
-            </span>
-            <div className="flex flex-wrap gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={() => fillCredentials('rshabib300@gmail.com', 'admin123')}
-                className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-[10px] cursor-pointer"
-              >
-                Habib (rshabib300@gmail.com)
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('tanvir@trendwear.com', 'client123')}
-                className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-[10px] cursor-pointer"
-              >
-                Client (tanvir@trendwear.com)
-              </button>
-            </div>
           </div>
         </div>
       </div>
