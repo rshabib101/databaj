@@ -1,0 +1,23 @@
+import mongoose from 'mongoose';
+
+const ItemSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      trim: true,
+      maxlength: [100, 'Title cannot exceed 100 characters'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Description cannot exceed 500 characters'],
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Prevent model recompilation error in Next.js hot-reloading
+export default mongoose.models.Item || mongoose.model('Item', ItemSchema);

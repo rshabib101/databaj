@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --background: #000000;
+  --foreground: #ffffff;
+  color-scheme: dark;
+}
+
+html.light,
+html[data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,15 +26,107 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
+
+/* Light Mode Comprehensive Theme Adapters */
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-black,
+html.light .bg-black\/80,
+html.light .bg-black\/60,
+html.light .bg-black\/50,
+html.light .bg-black\/40 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-zinc-950,
+html.light .bg-zinc-950\/80,
+html.light .bg-zinc-950\/60 {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-zinc-900,
+html.light .bg-zinc-900\/90,
+html.light .bg-zinc-900\/80,
+html.light .bg-zinc-900\/70,
+html.light .bg-zinc-900\/60,
+html.light .bg-zinc-900\/50,
+html.light .bg-zinc-900\/40 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .bg-zinc-850 {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .border-zinc-900,
+html.light .border-zinc-850,
+html.light .border-zinc-800,
+html.light .border-zinc-800\/90,
+html.light .border-zinc-800\/80,
+html.light .border-zinc-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-zinc-100,
+html.light .text-zinc-200,
+html.light .text-zinc-300 {
+  color: #1e293b !important;
+}
+
+html.light .text-zinc-400 {
+  color: #475569 !important;
+}
+
+html.light .text-zinc-500 {
+  color: #64748b !important;
+}
+
+html.light .text-zinc-600 {
+  color: #94a3b8 !important;
+}
+
+html.light input,
+html.light textarea,
+html.light select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light .shadow-2xl {
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.light .bg-emerald-500,
+html.light .bg-emerald-400 {
+  color: #000000 !important;
+}
+
+html.light .bg-blue-600,
+html.light .bg-blue-500,
+html.light .bg-indigo-600 {
+  color: #ffffff !important;
+}
+
+html.light .bg-zinc-800 {
+  background-color: #e2e8f0 !important;
+}
+
