@@ -379,16 +379,16 @@ export default function DashboardPage() {
           newPassword: newPassword || undefined,
         }),
       });
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         setCurrentUser(data.user);
-        setProfileSuccessMsg('প্রোফাইল সফলভাবে আপডেট করা হয়েছে!');
+        setProfileSuccessMsg(data.message || 'প্রোফাইল সফলভাবে আপডেট করা হয়েছে!');
         setNewPassword('');
       } else {
         setProfileErrorMsg(data.message || 'আপডেট করতে সমস্যা হয়েছে।');
       }
     } catch (err) {
-      setProfileErrorMsg('সার্ভারে সমস্যা হয়েছে, পুনরায় চেষ্টা করুন।');
+      setProfileErrorMsg(err.message || 'সার্ভারে সমস্যা হয়েছে, পুনরায় চেষ্টা করুন।');
       console.error(err);
     } finally {
       setSavingProfile(false);
