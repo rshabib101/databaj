@@ -7,6 +7,7 @@ import Image from 'next/image';
 import SuperAdminBar from '@/components/SuperAdminBar';
 import AuditReportView from '@/components/AuditReportView';
 import AuditFormModal from '@/components/AuditFormModal';
+import ClientDetailsModal from '@/components/admin/ClientDetailsModal';
 import {
   ShieldCheck,
   Building,
@@ -68,6 +69,7 @@ export default function AdminPage() {
   const [activeCampaignId, setActiveCampaignId] = useState(null);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [viewClientModal, setViewClientModal] = useState(null);
 
   // Dynamic Services state
   const [services, setServices] = useState([]);
@@ -1841,6 +1843,14 @@ export default function AdminPage() {
 
                       <div className="flex items-center gap-2 shrink-0">
                         <button
+                          onClick={() => setViewClientModal(client)}
+                          className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                          title="ক্লায়েন্টের বিস্তারিত প্রোফাইল, ডিভাইস ও আইপি দেখুন"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </button>
+                        <button
                           onClick={() => handleApproveClient(client._id)}
                           className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
                         >
@@ -1902,7 +1912,10 @@ export default function AdminPage() {
                                 </div>
                                 <div>
                                   <span className="font-bold text-white block">{client.companyName}</span>
-                                  <span className="text-[11px] text-zinc-500">{client.name}</span>
+                                  <span className="text-[11px] text-zinc-500 block">{client.name}</span>
+                                  {client.phone && (
+                                    <span className="font-mono text-[10px] text-zinc-400 block">{client.phone}</span>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -1932,6 +1945,14 @@ export default function AdminPage() {
                             </td>
                             <td className="p-4 text-right">
                               <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setViewClientModal(client)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                                  title="ক্লায়েন্টের বিস্তারিত প্রোফাইল ও ডিভাইস/আইপি দেখুন"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>View</span>
+                                </button>
                                 {isPending ? (
                                   <button
                                     onClick={() => handleApproveClient(client._id)}
@@ -3761,6 +3782,27 @@ export default function AdminPage() {
         isSuperAdmin={true}
         currentClientId={selectedClientId}
       />
+
+      {/* Client Profile, Device & IP View Details Modal */}
+      {viewClientModal && (
+        <ClientDetailsModal
+          isOpen={!!viewClientModal}
+          client={viewClientModal}
+          onClose={() => setViewClientModal(null)}
+          onApprove={(id) => {
+            handleApproveClient(id);
+            setViewClientModal((prev) => (prev ? { ...prev, status: 'active', isVerified: true } : null));
+          }}
+          onSuspend={(id) => {
+            handleSuspendClient(id);
+            setViewClientModal((prev) => (prev ? { ...prev, status: 'suspended', isVerified: false } : null));
+          }}
+          onDelete={(id) => {
+            handleDeleteClient(id);
+            setViewClientModal(null);
+          }}
+        />
+      )}
     </div>
   );
 }

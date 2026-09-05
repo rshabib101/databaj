@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ShieldCheck, Building2, User, Mail, Lock, ArrowRight, Sparkles, CheckCircle, KeyRound } from 'lucide-react';
+import { X, ShieldCheck, Building2, User, Mail, Lock, Phone, ArrowRight, Sparkles, CheckCircle, KeyRound } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'verify'
@@ -9,6 +9,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [phone, setPhone] = useState('');
   const [industry, setIndustry] = useState('E-commerce & Retail');
   const [verificationCode, setVerificationCode] = useState('');
   const [generatedDemoCode, setGeneratedDemoCode] = useState('');
@@ -48,10 +49,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         return;
       }
 
+      const clientMeta = {
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        language: typeof navigator !== 'undefined' ? navigator.language : '',
+        screenResolution: typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '',
+        platform: typeof navigator !== 'undefined' ? navigator.platform : '',
+        cookieEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : true,
+      };
+
       const payload =
         mode === 'login'
-          ? { action: 'login', email, password }
-          : { action: 'register', email, password, name, companyName, industry };
+          ? { action: 'login', email, password, clientMeta }
+          : { action: 'register', email, password, name, companyName, industry, phone, clientMeta };
 
       const res = await fetch('/api/auth', {
         method: 'POST',
@@ -306,6 +315,21 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-zinc-300 mb-1">ফোন নম্বর *</label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" />
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g., 017XXXXXXXX বা +8801XXXXXXXXX"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                       />
                     </div>
                   </div>

@@ -8,6 +8,7 @@ import {
   User,
   Mail,
   Lock,
+  Phone,
   ArrowRight,
   AlertCircle,
   CheckCircle2,
@@ -20,6 +21,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [industry, setIndustry] = useState('E-commerce & Retail');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,6 +33,14 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
 
+    const clientMeta = {
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+      language: typeof navigator !== 'undefined' ? navigator.language : '',
+      screenResolution: typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '',
+      platform: typeof navigator !== 'undefined' ? navigator.platform : '',
+      cookieEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : true,
+    };
+
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
@@ -40,8 +50,10 @@ export default function RegisterPage() {
           name,
           companyName,
           industry,
+          phone,
           email,
           password,
+          clientMeta,
         }),
       });
 
@@ -116,6 +128,10 @@ export default function RegisterPage() {
                   <span className="font-mono text-emerald-400">{email}</span>
                 </div>
                 <div className="flex items-center justify-between text-zinc-400 text-[11px]">
+                  <span>ফোন নম্বর:</span>
+                  <span className="font-mono text-zinc-200">{phone}</span>
+                </div>
+                <div className="flex items-center justify-between text-zinc-400 text-[11px]">
                   <span>স্ট্যাটাস:</span>
                   <span className="text-amber-400 font-bold">⏳ Pending Super Admin Approval</span>
                 </div>
@@ -159,6 +175,23 @@ export default function RegisterPage() {
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                  ফোন নম্বর (হোয়াটসঅ্যাপ/মোবাইল) *
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g., 017XXXXXXXX বা +8801XXXXXXXXX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>
               </div>

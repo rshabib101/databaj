@@ -4,6 +4,7 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { ensureDefaultData } from '@/lib/seedData';
+import { extractClientMeta } from '@/lib/deviceDetector';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'databaj-super-secret-jwt-key-2026';
 
@@ -40,11 +41,14 @@ export async function POST(request) {
     await ensureDefaultData();
 
     const body = await request.json();
-    const { action, email, password, name, companyName, industry } = body;
+    const { action, email, password, name, companyName, industry, phone, clientMeta } = body;
 
     if (action === 'register') {
-      if (!email || !password || !name || !companyName) {
-        return NextResponse.json({ success: false, message: 'All fields are required.' }, { status: 400 });
+      if (!email || !password || !name || !companyName || !phone || !phone.trim()) {
+        return NextResponse.json({
+          success: false,
+          message: 'সকল তথ্য আবশ্যক: নাম, কোম্পানি, ফোন নম্বর, ইমেইল এবং পাসওয়ার্ড প্রদান করুন।'
+        }, { status: 400 });
       }
 
       const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -53,6 +57,7 @@ export async function POST(request) {
       }
 
       const isHabibOrAdmin = email.toLowerCase().includes('rshabib300') || email.toLowerCase().includes('admin@');
+      const deviceMeta = extractClientMeta(request, clientMeta || {});
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await User.create({
@@ -61,9 +66,23 @@ export async function POST(request) {
         password: hashedPassword,
         companyName,
         industry: industry || 'E-commerce',
+        phone: phone.trim(),
         role: isHabibOrAdmin ? 'super_admin' : 'client',
         isVerified: isHabibOrAdmin,
         status: isHabibOrAdmin ? 'active' : 'pending_approval',
+        registrationMeta: deviceMeta,
+        lastLoginMeta: deviceMeta,
+        loginHistory: [
+          {
+            ip: deviceMeta.ip,
+            browser: deviceMeta.browser,
+            os: deviceMeta.os,
+            device: deviceMeta.device,
+            city: deviceMeta.city,
+            country: deviceMeta.country,
+            timestamp: new Date(),
+          },
+        ],
       });
 
       if (!isHabibOrAdmin) {
@@ -183,6 +202,26 @@ export async function POST(request) {
           { status: 403 }
         );
       }
+
+      // Update device & session metadata on login
+      const currentLoginMeta = extractClientMeta(request, clientMeta || {});
+      user.lastLoginMeta = currentLoginMeta;
+      if (!Array.isArray(user.loginHistory)) {
+        user.loginHistory = [];
+      }
+      user.loginHistory.unshift({
+        ip: currentLoginMeta.ip,
+        browser: currentLoginMeta.browser,
+        os: currentLoginMeta.os,
+        device: currentLoginMeta.device,
+        city: currentLoginMeta.city,
+        country: currentLoginMeta.country,
+        timestamp: new Date(),
+      });
+      if (user.loginHistory.length > 20) {
+        user.loginHistory = user.loginHistory.slice(0, 20);
+      }
+      await user.save();
 
       const token = jwt.sign(
         { userId: user._id, role: user.role, companyName: user.companyName },

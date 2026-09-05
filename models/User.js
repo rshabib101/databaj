@@ -65,6 +65,18 @@ const UserSchema = new mongoose.Schema(
       enum: ['active', 'pending_approval', 'suspended'],
       default: 'pending_approval',
     },
+    registrationMeta: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    lastLoginMeta: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    loginHistory: {
+      type: Array,
+      default: [],
+    },
   },
   {
     timestamps: true,

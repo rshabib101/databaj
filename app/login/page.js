@@ -23,6 +23,14 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      const clientMeta = {
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        language: typeof navigator !== 'undefined' ? navigator.language : '',
+        screenResolution: typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '',
+        platform: typeof navigator !== 'undefined' ? navigator.platform : '',
+        cookieEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : true,
+      };
+
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,6 +38,7 @@ export default function LoginPage() {
           action: 'login',
           email: email.trim(),
           password,
+          clientMeta,
         }),
       });
 
