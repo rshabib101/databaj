@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -177,6 +177,8 @@ export default function AdminPage() {
   const [adminTicketReply, setAdminTicketReply] = useState('');
   const [sendingAdminReply, setSendingAdminReply] = useState(false);
   const [adminTicketStatusFilter, setAdminTicketStatusFilter] = useState('all');
+  const adminMessagesEndRef = useRef(null);
+  const lastAdminTypingSent = useRef(0);
 
   // Client Credentials Vault state
   const [adminCredentials, setAdminCredentials] = useState([]);
@@ -343,8 +345,8 @@ export default function AdminPage() {
   };
 
   // Fetch Tickets
-  const refreshAdminTickets = useCallback(async () => {
-    setLoadingAdminTickets(true);
+  const refreshAdminTickets = useCallback(async (silent = false) => {
+    if (!silent) setLoadingAdminTickets(true);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
       const res = await fetch('/api/tickets', {
@@ -361,7 +363,7 @@ export default function AdminPage() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoadingAdminTickets(false);
+      if (!silent) setLoadingAdminTickets(false);
     }
   }, []);
 
@@ -445,6 +447,26 @@ export default function AdminPage() {
     };
   }, [currentUser]);
 
+  // Real-time automatic background polling for tickets & live chat (No manual refresh needed)
+  useEffect(() => {
+    if (currentUser?.role !== 'super_admin') return;
+
+    // Poll every 3 seconds if inside tickets tab, or 10 seconds if in overview
+    const pollInterval = activeTab === 'tickets' ? 3000 : 10000;
+    const interval = setInterval(() => {
+      refreshAdminTickets(true);
+    }, pollInterval);
+
+    return () => clearInterval(interval);
+  }, [currentUser, activeTab, refreshAdminTickets]);
+
+  // Auto-scroll admin chat to latest message
+  useEffect(() => {
+    if (selectedAdminTicket?.messages?.length) {
+      adminMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedAdminTicket?.messages?.length]);
+
   const handleUpdateTicketStatus = async (id, status) => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
@@ -462,6 +484,24 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleAdminTyping = (val) => {
+    setAdminTicketReply(val);
+    if (!selectedAdminTicket) return;
+    const now = Date.now();
+    if (now - lastAdminTypingSent.current > 2500) {
+      lastAdminTypingSent.current = now;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
+      fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action: 'typing', id: selectedAdminTicket._id }),
+      }).catch(() => {});
     }
   };
 
@@ -3938,6 +3978,20 @@ export default function AdminPage() {
                             </div>
                           );
                         })}
+
+                        {/* Live Typing Indicator from Client */}
+                        {selectedAdminTicket.clientTypingUntil && new Date(selectedAdminTicket.clientTypingUntil) > new Date() && (
+                          <div className="flex items-center gap-2.5 text-xs text-blue-400 font-mono py-2 px-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 w-fit animate-pulse">
+                            <span className="flex gap-1 items-center">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </span>
+                            <span className="font-medium">{selectedAdminTicket.companyName || 'ক্লায়েন্ট'} টাইপ করছেন...</span>
+                          </div>
+                        )}
+
+                        <div ref={adminMessagesEndRef} />
                       </div>
 
                       {/* Admin Reply Form */}
@@ -3945,7 +3999,7 @@ export default function AdminPage() {
                         <textarea
                           rows={3}
                           value={adminTicketReply}
-                          onChange={(e) => setAdminTicketReply(e.target.value)}
+                          onChange={(e) => handleAdminTyping(e.target.value)}
                           placeholder="ক্লায়েন্টের জন্য অফিসিয়াল উত্তর বা সমাধানের নির্দেশিকা লিখুন..."
                           className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500"
                         />

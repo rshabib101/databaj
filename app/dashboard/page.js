@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -141,6 +141,8 @@ export default function DashboardPage() {
   const [creatingTicket, setCreatingTicket] = useState(false);
   const [replyMessage, setReplyMessage] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const messagesEndRef = useRef(null);
+  const lastClientTypingSent = useRef(0);
 
   // 5. AI Ad Copy Generator state
   const [aiProduct, setAiProduct] = useState('');
@@ -267,8 +269,8 @@ export default function DashboardPage() {
   }, []);
 
   // 5. Fetch tickets
-  const refreshTickets = useCallback(async () => {
-    setLoadingTickets(true);
+  const refreshTickets = useCallback(async (silent = false) => {
+    if (!silent) setLoadingTickets(true);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
       const res = await fetch('/api/tickets', {
@@ -286,7 +288,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoadingTickets(false);
+      if (!silent) setLoadingTickets(false);
     }
   }, []);
 
@@ -361,6 +363,26 @@ export default function DashboardPage() {
       ignore = true;
     };
   }, [currentUser]);
+
+  // Real-time automatic background polling for tickets & live chat (No manual refresh needed)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Poll every 3 seconds if inside support tab, or 12 seconds in background
+    const pollInterval = activeTab === 'support' ? 3000 : 12000;
+    const interval = setInterval(() => {
+      refreshTickets(true);
+    }, pollInterval);
+
+    return () => clearInterval(interval);
+  }, [currentUser, activeTab, refreshTickets]);
+
+  // Auto-scroll chat to latest message
+  useEffect(() => {
+    if (selectedTicket?.messages?.length) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedTicket?.messages?.length]);
 
   // Logout
   const handleLogout = async () => {
@@ -564,6 +586,24 @@ export default function DashboardPage() {
       console.error(err);
     } finally {
       setCreatingTicket(false);
+    }
+  };
+
+  const handleClientTyping = (val) => {
+    setReplyMessage(val);
+    if (!selectedTicket) return;
+    const now = Date.now();
+    if (now - lastClientTypingSent.current > 2500) {
+      lastClientTypingSent.current = now;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
+      fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action: 'typing', id: selectedTicket._id }),
+      }).catch(() => {});
     }
   };
 
@@ -2178,6 +2218,20 @@ export default function DashboardPage() {
                         </div>
                       );
                     })}
+
+                    {/* Live Typing Indicator from Super Admin */}
+                    {selectedTicket.adminTypingUntil && new Date(selectedTicket.adminTypingUntil) > new Date() && (
+                      <div className="flex items-center gap-2.5 text-xs text-emerald-400 font-mono py-2 px-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 w-fit animate-pulse">
+                        <span className="flex gap-1 items-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </span>
+                        <span className="font-medium">DataBaj Support টাইপ করছেন...</span>
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
                   </div>
 
                   {/* Reply Form */}
@@ -2185,7 +2239,7 @@ export default function DashboardPage() {
                     <textarea
                       rows={3}
                       value={replyMessage}
-                      onChange={(e) => setReplyMessage(e.target.value)}
+                      onChange={(e) => handleClientTyping(e.target.value)}
                       placeholder="এখানে আপনার উত্তর বা নতুন মেসেজ লিখুন..."
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500"
                     />

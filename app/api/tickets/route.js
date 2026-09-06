@@ -67,6 +67,28 @@ export async function POST(request) {
     const senderName = userDoc?.name || authUser.name || (authUser.role === 'super_admin' ? 'Super Admin' : 'Client');
     const senderRole = authUser.role === 'super_admin' ? 'super_admin' : 'client';
 
+    // 0. Typing signal handler
+    if (action === 'typing') {
+      if (!id) {
+        return NextResponse.json({ success: false, message: 'টিকেট আইডি আবশ্যক' }, { status: 400 });
+      }
+
+      let filter = { _id: id };
+      if (authUser.role !== 'super_admin') {
+        filter.userId = authUser.userId;
+      }
+
+      // Valid for 4 seconds from now
+      const expiresAt = new Date(Date.now() + 4000);
+      const updateField =
+        senderRole === 'super_admin'
+          ? { adminTypingUntil: expiresAt }
+          : { clientTypingUntil: expiresAt };
+
+      await Ticket.findOneAndUpdate(filter, { $set: updateField });
+      return NextResponse.json({ success: true });
+    }
+
     // 1. Reply to existing ticket
     if (action === 'reply') {
       if (!id || !message?.trim()) {
@@ -90,10 +112,12 @@ export async function POST(request) {
         createdAt: new Date(),
       });
 
-      // Update ticket status dynamically on reply
+      // Clear typing status on message send
       if (senderRole === 'super_admin') {
+        ticket.adminTypingUntil = null;
         ticket.status = 'in_progress';
       } else {
+        ticket.clientTypingUntil = null;
         if (ticket.status === 'resolved' || ticket.status === 'closed') {
           ticket.status = 'open';
         }

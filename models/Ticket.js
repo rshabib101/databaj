@@ -62,8 +62,20 @@ const TicketSchema = new mongoose.Schema(
       default: 'open',
     },
     messages: [TicketMessageSchema],
+    clientTypingUntil: {
+      type: Date,
+      default: null,
+    },
+    adminTypingUntil: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
+if (mongoose.models.Ticket) {
+  delete mongoose.models.Ticket;
+}
+
+export default mongoose.model('Ticket', TicketSchema);
