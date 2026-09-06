@@ -19,6 +19,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  Menu,
   BarChart3,
   ShoppingBag,
   User,
@@ -61,6 +62,7 @@ export default function DashboardPage() {
 
   // Layout state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // Active Tab: 'overview' | 'audits' | 'orders' | 'credentials' | 'support' | 'tasks' | 'ai-copy' | 'profile'
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -68,6 +70,7 @@ export default function DashboardPage() {
   const handleTabChange = useCallback((newTab) => {
     if (!VALID_TABS.includes(newTab)) return;
     setActiveTab(newTab);
+    setMobileSidebarOpen(false);
     const url = newTab === 'overview' ? '/dashboard' : `/dashboard?tab=${newTab}`;
     if (typeof window !== 'undefined') {
       window.history.pushState({ tab: newTab }, '', url);
@@ -779,22 +782,32 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-black text-white font-sans flex flex-col selection:bg-emerald-500 selection:text-black">
       {/* Top Navbar */}
-      <header className="h-16 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="h-16 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Drawer Hamburger Button */}
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="md:hidden p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white"
+            title="মেন্যু খুলুন"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          {/* Desktop Sidebar Collapse Toggle */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white transition"
+            className="hidden md:flex p-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white transition cursor-pointer"
             title={sidebarCollapsed ? 'সাইডবার খুলুন' : 'সাইডবার বন্ধ করুন'}
           >
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
 
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-xl font-black tracking-tight text-white flex items-center gap-1.5">
+            <span className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-1">
               DATA<span className="text-emerald-400">BAJ</span>
             </span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
-              Client Portal
+              Portal
             </span>
           </Link>
         </div>
@@ -827,17 +840,49 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Layout Body */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Collapsible Left Sidebar */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Backdrop Overlay */}
+        {mobileSidebarOpen && (
+          <div
+            onClick={() => setMobileSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm md:hidden animate-fadeIn"
+          />
+        )}
+
+        {/* Responsive Left Sidebar (Drawer on mobile, collapsible on desktop) */}
         <aside
           className={`border-r border-zinc-800 bg-zinc-950 transition-all duration-300 flex flex-col justify-between shrink-0 overflow-y-auto ${
-            sidebarCollapsed ? 'w-20' : 'w-64 sm:w-72'
+            /* Mobile drawer position */
+            mobileSidebarOpen
+              ? 'fixed inset-y-0 left-0 z-50 w-72 shadow-2xl translate-x-0'
+              : 'fixed -translate-x-full md:relative md:translate-x-0'
+          } ${
+            /* Desktop collapsed/expanded */
+            sidebarCollapsed ? 'md:w-20' : 'md:w-64 sm:w-72'
           }`}
         >
           {/* Top of Sidebar */}
-          <div className="p-4 space-y-5">
+          <div className="p-4 space-y-4">
+            {/* Mobile Header with close button */}
+            <div className="flex items-center justify-between md:hidden pb-3 border-b border-zinc-900">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black tracking-tight text-white">
+                  DATA<span className="text-emerald-400">BAJ</span>
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Client Menu
+                </span>
+              </div>
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="p-1.5 rounded-lg bg-zinc-900 text-zinc-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* User card in sidebar */}
-            <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center gap-3 ${sidebarCollapsed ? 'justify-center p-2' : ''}`}>
+            <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center gap-3 ${sidebarCollapsed ? 'md:justify-center md:p-2' : ''}`}>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold shrink-0 overflow-hidden relative">
                 {currentUser?.logoUrl ? (
                   <Image
@@ -1062,7 +1107,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 bg-black overflow-y-auto p-4 sm:p-8">
+        <main className="flex-1 min-w-0 bg-black overflow-y-auto p-3.5 sm:p-6 lg:p-8">
           {/* Top Eye-Catching Promotional Ad Banner (Controlled by Super Admin) */}
           <ClientAdBanner currentUser={currentUser} />
 
