@@ -1108,12 +1108,12 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 min-w-0 bg-black overflow-y-auto p-3.5 sm:p-6 lg:p-8">
-          {/* Top Eye-Catching Promotional Ad Banner (Controlled by Super Admin) */}
-          <ClientAdBanner currentUser={currentUser} />
-
           {/* TAB 0: DASHBOARD OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">
+              {/* Top Eye-Catching Promotional Ad Banner (Visible only in Dashboard Overview) */}
+              <ClientAdBanner currentUser={currentUser} />
+
               {/* Welcome Hero Banner */}
               <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 p-6 sm:p-8 shadow-2xl">
                 {/* Decorative background glow */}
