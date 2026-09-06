@@ -26,8 +26,8 @@ export default function RegisteredCompaniesSlider() {
   return (
     <section className="py-14 bg-zinc-950 border-y border-zinc-900 overflow-hidden relative">
       {/* Background gradient fade on left and right for elegant marquee effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-r from-zinc-950 to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-l from-zinc-950 to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-r from-zinc-950 to-transparent dark:from-zinc-950 [html.light_&]:from-slate-50 z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-l from-zinc-950 to-transparent dark:from-zinc-950 [html.light_&]:from-slate-50 z-10 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-semibold">

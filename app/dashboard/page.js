@@ -7,6 +7,7 @@ import Image from 'next/image';
 import AuditReportView from '@/components/AuditReportView';
 import AuditFormModal from '@/components/AuditFormModal';
 import ConsultationModal from '@/components/agency/ConsultationModal';
+import ClientAdBanner from '@/components/ClientAdBanner';
 import {
   Building2,
   Plus,
@@ -43,7 +44,15 @@ import {
   CheckSquare,
   Link2,
   Video,
+  LayoutDashboard,
+  ArrowRight,
+  ArrowUpRight,
+  ShieldCheck,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
+
+const VALID_TABS = ['overview', 'audits', 'orders', 'credentials', 'support', 'tasks', 'ai-copy', 'profile'];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -52,8 +61,43 @@ export default function DashboardPage() {
 
   // Layout state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Active Tab: 'audits' | 'orders' | 'credentials' | 'support' | 'ai-copy' | 'profile'
-  const [activeTab, setActiveTab] = useState('audits');
+  // Active Tab: 'overview' | 'audits' | 'orders' | 'credentials' | 'support' | 'tasks' | 'ai-copy' | 'profile'
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Handle Tab Switch with browser URL sync
+  const handleTabChange = useCallback((newTab) => {
+    if (!VALID_TABS.includes(newTab)) return;
+    setActiveTab(newTab);
+    const url = newTab === 'overview' ? '/dashboard' : `/dashboard?tab=${newTab}`;
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ tab: newTab }, '', url);
+    }
+  }, []);
+
+  // Listen to popstate and initial URL parameters
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncTabFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+
+      // Also check subroute like /dashboard/orders
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const pathTab = pathParts[0] === 'dashboard' && pathParts[1] ? pathParts[1] : null;
+
+      const targetTab = tabParam || pathTab;
+      if (targetTab && VALID_TABS.includes(targetTab)) {
+        setActiveTab(targetTab);
+      } else {
+        setActiveTab('overview');
+      }
+    };
+
+    syncTabFromUrl();
+    window.addEventListener('popstate', syncTabFromUrl);
+    return () => window.removeEventListener('popstate', syncTabFromUrl);
+  }, []);
 
   // 1. Campaign Audit state
   const [campaigns, setCampaigns] = useState([]);
@@ -828,9 +872,30 @@ export default function DashboardPage() {
 
             {/* Sidebar Navigation */}
             <nav className="space-y-1.5">
+              {/* Tab 0: Dashboard Overview */}
+              <button
+                onClick={() => handleTabChange('overview')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
+                  activeTab === 'overview'
+                    ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
+                } ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between'}`}
+                title="ড্যাশবোর্ড ওভারভিউ"
+              >
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard className="w-4 h-4 shrink-0 text-emerald-400" />
+                  {!sidebarCollapsed && <span>ড্যাশবোর্ড ওভারভিউ</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
+                    Live
+                  </span>
+                )}
+              </button>
+
               {/* Tab 1: Campaign Audits */}
               <button
-                onClick={() => setActiveTab('audits')}
+                onClick={() => handleTabChange('audits')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'audits'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -851,7 +916,7 @@ export default function DashboardPage() {
 
               {/* Tab 2: My Orders & Status */}
               <button
-                onClick={() => setActiveTab('orders')}
+                onClick={() => handleTabChange('orders')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'orders'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -874,7 +939,7 @@ export default function DashboardPage() {
 
               {/* Tab 3: Credential Share Vault */}
               <button
-                onClick={() => setActiveTab('credentials')}
+                onClick={() => handleTabChange('credentials')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'credentials'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -895,7 +960,7 @@ export default function DashboardPage() {
 
               {/* Tab 4: Support Tickets & Inbox */}
               <button
-                onClick={() => setActiveTab('support')}
+                onClick={() => handleTabChange('support')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'support'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -920,7 +985,7 @@ export default function DashboardPage() {
 
               {/* Tab 5: AI Ad Copy & Hook Generator */}
               <button
-                onClick={() => setActiveTab('ai-copy')}
+                onClick={() => handleTabChange('ai-copy')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'ai-copy'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -941,7 +1006,7 @@ export default function DashboardPage() {
 
               {/* Tab 6: Task for Admin */}
               <button
-                onClick={() => setActiveTab('tasks')}
+                onClick={() => handleTabChange('tasks')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'tasks'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -966,7 +1031,7 @@ export default function DashboardPage() {
 
               {/* Tab 7: Profile Settings */}
               <button
-                onClick={() => setActiveTab('profile')}
+                onClick={() => handleTabChange('profile')}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === 'profile'
                     ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
@@ -998,6 +1063,547 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 bg-black overflow-y-auto p-4 sm:p-8">
+          {/* Top Eye-Catching Promotional Ad Banner (Controlled by Super Admin) */}
+          <ClientAdBanner currentUser={currentUser} />
+
+          {/* TAB 0: DASHBOARD OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">
+              {/* Welcome Hero Banner */}
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 p-6 sm:p-8 shadow-2xl">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-1/3 -mb-10 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="space-y-3 max-w-2xl">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        লাইভ পোর্টাল সক্রিয়
+                      </span>
+                      <span className="px-2.5 py-1 rounded-full bg-zinc-800/80 text-zinc-400 text-xs font-mono">
+                        {currentUser?.companyName || 'ক্লায়েন্ট পোর্টাল'}
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                      স্বাগতম, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-emerald-400">{currentUser?.name || 'ক্লায়েন্ট'}</span>! 👋
+                    </h1>
+                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                      এটি আপনার সেন্ট্রাল কন্ট্রোল ড্যাশবোর্ড। এখান থেকে ক্যাম্পেইন অডিট রিপোর্ট, লাইভ সার্ভিস অর্ডার স্ট্যাটাস, ক্রেডেনশিয়াল ভল্ট, সাপোর্ট টিকিট এবং অ্যাডমিন টাস্কের সার্বিক তথ্য মনিটর ও পরিচালনা করুন।
+                    </p>
+                  </div>
+
+                  {/* Quick Action Buttons on Hero */}
+                  <div className="flex flex-wrap items-center gap-3 shrink-0">
+                    <button
+                      onClick={() => setIsAuditModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>নতুন অডিট</span>
+                    </button>
+                    <button
+                      onClick={() => setIsOrderModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-zinc-800 hover:border-emerald-500/40 font-bold text-xs transition cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>সার্ভিস বুক করুন</span>
+                    </button>
+                    <button
+                      onClick={() => setIsTicketModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-blue-400 border border-zinc-800 hover:border-blue-500/40 font-bold text-xs transition cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <LifeBuoy className="w-4 h-4" />
+                      <span>সাপোর্ট টিকিট</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Feature Cards Grid - 6 Key Sidebar Features */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {/* 1. Campaign Audits Card */}
+                <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-emerald-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                        <BarChart3 className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        মেটা ও ফেসবুক
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      <div className="text-xs font-semibold text-zinc-400">ক্যাম্পেইন অডিট সমূহ</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-white font-mono">{campaigns.length}</span>
+                        <span className="text-xs text-zinc-500">টি অডিট রেকর্ড</span>
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-zinc-900 text-xs">
+                      <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850">
+                        <span className="text-zinc-500 block text-[10px]">ভালো স্কোর (৮০+)</span>
+                        <span className="text-emerald-400 font-bold font-mono">
+                          {campaigns.filter((c) => (c.overallScore || 0) >= 80).length} টি
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850">
+                        <span className="text-zinc-500 block text-[10px]">অপটিমাইজেশন দরকার</span>
+                        <span className="text-amber-400 font-bold font-mono">
+                          {campaigns.filter((c) => (c.overallScore || 0) < 80).length} টি
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="mt-5 pt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleTabChange('audits')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition group-hover:translate-x-0.5 cursor-pointer"
+                    >
+                      <span>অডিট রিপোর্টস দেখুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setIsAuditModalOpen(true)}
+                      className="p-2 rounded-xl bg-zinc-900 hover:bg-emerald-500 hover:text-black text-zinc-400 border border-zinc-800 transition cursor-pointer"
+                      title="নতুন অডিট করুন"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. My Orders & Status Card */}
+                <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-blue-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                        <ShoppingBag className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        সার্ভিস ও অর্ডার
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      <div className="text-xs font-semibold text-zinc-400">আমার অর্ডার ও স্ট্যাটাস</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-white font-mono">{orders.length}</span>
+                        <span className="text-xs text-zinc-500">টি সার্ভিস অর্ডার</span>
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-zinc-900 text-xs">
+                      <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850">
+                        <span className="text-zinc-500 block text-[10px]">অপেক্ষমাণ (Pending)</span>
+                        <span className="text-amber-400 font-bold font-mono">
+                          {orders.filter((o) => !o.status || o.status === 'pending').length} টি
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850">
+                        <span className="text-zinc-500 block text-[10px]">চলমান / অনুমোদিত</span>
+                        <span className="text-emerald-400 font-bold font-mono">
+                          {orders.filter((o) => o.status === 'reviewing' || o.status === 'converted' || o.status === 'contacted').length} টি
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="mt-5 pt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleTabChange('orders')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 transition group-hover:translate-x-0.5 cursor-pointer"
+                    >
+                      <span>অর্ডার হিস্ট্রি দেখুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setIsOrderModalOpen(true)}
+                      className="p-2 rounded-xl bg-zinc-900 hover:bg-blue-500 hover:text-white text-zinc-400 border border-zinc-800 transition cursor-pointer"
+                      title="নতুন সার্ভিস বুক করুন"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Credential Share Vault Card */}
+                <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                        <KeyRound className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        AES-256 ভল্ট
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      <div className="text-xs font-semibold text-zinc-400">ক্রেডেনশিয়াল শেয়ার (ভল্ট)</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-white font-mono">{credentials.length}</span>
+                        <span className="text-xs text-zinc-500">টি সুরক্ষিত অ্যাক্সেস</span>
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-3 border-t border-zinc-900 text-[11px]">
+                      <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-850 text-center">
+                        <span className="text-zinc-500 block text-[9px]">ফেসবুক BM</span>
+                        <span className="text-blue-400 font-bold font-mono">
+                          {credentials.filter((c) => c.platform === 'facebook_bm').length}
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-850 text-center">
+                        <span className="text-zinc-500 block text-[9px]">ওয়েবসাইট</span>
+                        <span className="text-emerald-400 font-bold font-mono">
+                          {credentials.filter((c) => c.platform === 'website_admin').length}
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-850 text-center">
+                        <span className="text-zinc-500 block text-[9px]">অন্যান্য</span>
+                        <span className="text-amber-400 font-bold font-mono">
+                          {credentials.filter((c) => c.platform !== 'facebook_bm' && c.platform !== 'website_admin').length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="mt-5 pt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleTabChange('credentials')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition group-hover:translate-x-0.5 cursor-pointer"
+                    >
+                      <span>ভল্ট ম্যানেজ করুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleOpenCredModal()}
+                      className="p-2 rounded-xl bg-zinc-900 hover:bg-amber-500 hover:text-black text-zinc-400 border border-zinc-800 transition cursor-pointer"
+                      title="নতুন ক্রেডেনশিয়াল যোগ করুন"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Support Tickets & Inbox Card */}
+                <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-cyan-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-colors" />
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                        <LifeBuoy className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        হেল্পডেস্ক ও ইনবক্স
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      <div className="text-xs font-semibold text-zinc-400">সাপোর্ট টিকিট ও ইনবক্স</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-white font-mono">{tickets.length}</span>
+                        <span className="text-xs text-zinc-500">টি কনভারসেশন</span>
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-zinc-900 text-xs">
+                      <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850">
+                        <span className="text-zinc-500 block text-[10px]">ওপেন / জরুরি টিকিট</span>
+                        <span className={`font-bold font-mono ${
+                          tickets.filter((t) => t.status === 'open').length > 0 ? 'text-cyan-400 animate-pulse' : 'text-zinc-400'
+                        }`}>
+                          {tickets.filter((t) => t.status === 'open').length} টি
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850">
+                        <span className="text-zinc-500 block text-[10px]">সমাধানকৃত</span>
+                        <span className="text-emerald-400 font-bold font-mono">
+                          {tickets.filter((t) => t.status === 'resolved' || t.status === 'closed').length} টি
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="mt-5 pt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleTabChange('support')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition group-hover:translate-x-0.5 cursor-pointer"
+                    >
+                      <span>ইনবক্স ওপেন করুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setIsTicketModalOpen(true)}
+                      className="p-2 rounded-xl bg-zinc-900 hover:bg-cyan-500 hover:text-black text-zinc-400 border border-zinc-800 transition cursor-pointer"
+                      title="নতুন টিকিট খুলুন"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. Task for Admin Card */}
+                <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-teal-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-colors" />
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 group-hover:scale-110 transition-transform">
+                        <ClipboardList className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                        প্রজেক্ট বোর্ড
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      <div className="text-xs font-semibold text-zinc-400">Task for Admin (টাস্ক)</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-black text-white font-mono">{tasks.length}</span>
+                        <span className="text-xs text-zinc-500">টি টাস্ক তালিকাভুক্ত</span>
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-3 border-t border-zinc-900 text-[11px]">
+                      <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-850 text-center">
+                        <span className="text-zinc-500 block text-[9px]">পেন্ডিং</span>
+                        <span className="text-amber-400 font-bold font-mono">
+                          {tasks.filter((t) => t.status === 'pending').length}
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-850 text-center">
+                        <span className="text-zinc-500 block text-[9px]">ইন-রিভিউ</span>
+                        <span className="text-teal-400 font-bold font-mono">
+                          {tasks.filter((t) => t.status === 'in_review').length}
+                        </span>
+                      </div>
+                      <div className="bg-zinc-900/60 p-2 rounded-xl border border-zinc-850 text-center">
+                        <span className="text-zinc-500 block text-[9px]">সম্পন্ন (Done)</span>
+                        <span className="text-emerald-400 font-bold font-mono">
+                          {tasks.filter((t) => t.status === 'done').length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="mt-5 pt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleTabChange('tasks')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-400 hover:text-teal-300 transition group-hover:translate-x-0.5 cursor-pointer"
+                    >
+                      <span>টাস্ক বোর্ড দেখুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setIsTaskModalOpen(true)}
+                      className="p-2 rounded-xl bg-zinc-900 hover:bg-teal-500 hover:text-black text-zinc-400 border border-zinc-800 transition cursor-pointer"
+                      title="নতুন টাস্ক দিন"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 6. AI Ad Copy & Hook Generator Card */}
+                <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-pink-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-full blur-2xl group-hover:bg-pink-500/10 transition-colors" />
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform">
+                        <Wand2 className="w-6 h-6" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/30">
+                        ✨ AI POWERED
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 mb-3">
+                      <div className="text-xs font-semibold text-zinc-400">এআই অ্যাড কপি ও হুক জেনারেটর</div>
+                      <h3 className="text-base font-bold text-white leading-snug">
+                        হাই-কনভার্টিং বিজ্ঞাপন টেক্সট ও সেলস হুক
+                      </h3>
+                    </div>
+
+                    <p className="text-xs text-zinc-400 leading-relaxed bg-zinc-900/60 p-3 rounded-xl border border-zinc-850">
+                      ফেসবুক ও সোশ্যাল ক্যাম্পেইনের জন্য প্ররোচনামূলক প্রাইমারি টেক্সট, ক্লিক-ড্রাইভিং হেডলাইন ও আকর্ষণীয় অ্যাঙ্গেল নিমেষেই তৈরি করুন।
+                    </p>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="mt-5 pt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleTabChange('ai-copy')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-pink-400 hover:text-pink-300 transition group-hover:translate-x-0.5 cursor-pointer"
+                    >
+                      <span>এআই জেনারেটর শুরু করুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] text-zinc-500 font-mono">তাত্ক্ষণিক অ্যাকশন</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Snapshot: Recent Campaign Audits & Live Order Status */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left: Recent Audits Snapshot */}
+                <div className="lg:col-span-7 p-6 rounded-3xl bg-zinc-950 border border-zinc-850 space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <BarChart3 className="w-5 h-5 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-white">সাম্প্রতিক ক্যাম্পেইন অডিট রিপোর্টস</h3>
+                    </div>
+                    <button
+                      onClick={() => handleTabChange('audits')}
+                      className="text-xs text-emerald-400 hover:underline font-semibold"
+                    >
+                      সব দেখুন ({campaigns.length})
+                    </button>
+                  </div>
+
+                  {campaigns.length === 0 ? (
+                    <div className="py-10 text-center space-y-3">
+                      <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mx-auto">
+                        <BarChart3 className="w-6 h-6" />
+                      </div>
+                      <p className="text-xs text-zinc-500">এখনো কোনো ক্যাম্পেইন অডিট ডাটা যুক্ত করা হয়নি</p>
+                      <button
+                        onClick={() => setIsAuditModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>প্রথম অডিট করুন</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {campaigns.slice(0, 3).map((c) => (
+                        <div
+                          key={c._id}
+                          onClick={() => {
+                            setActiveCampaignId(c._id);
+                            handleTabChange('audits');
+                          }}
+                          className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/40 transition flex items-center justify-between gap-3 cursor-pointer group"
+                        >
+                          <div className="space-y-1 min-w-0">
+                            <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition truncate">
+                              {c.campaignName}
+                            </h4>
+                            <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
+                              <span>${Number(c.adSpend || 0).toLocaleString()} স্পেন্ড</span>
+                              <span>•</span>
+                              <span className="text-emerald-400 font-bold">{c.roas || '0'}x ROAS</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold ${
+                              (c.overallScore || 0) >= 80
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : (c.overallScore || 0) >= 60
+                                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                            }`}>
+                              {c.overallScore || 0}/১০০
+                            </span>
+                            <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Live Orders & Direct Agency Support */}
+                <div className="lg:col-span-5 space-y-5">
+                  {/* Recent Orders Mini Card */}
+                  <div className="p-6 rounded-3xl bg-zinc-950 border border-zinc-850 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <ShoppingBag className="w-5 h-5 text-blue-400" />
+                        <h3 className="text-sm font-bold text-white">লাইভ সার্ভিস রিকোয়েস্ট</h3>
+                      </div>
+                      <button
+                        onClick={() => handleTabChange('orders')}
+                        className="text-xs text-blue-400 hover:underline font-semibold"
+                      >
+                        সব দেখুন ({orders.length})
+                      </button>
+                    </div>
+
+                    {orders.length === 0 ? (
+                      <p className="text-xs text-zinc-500 text-center py-6">কোনো চলমান অর্ডার নেই</p>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {orders.slice(0, 2).map((ord) => {
+                          const badge = getStatusBadge(ord.status);
+                          return (
+                            <div key={ord._id} className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <span className="text-[10px] font-mono text-zinc-400 block">{ord.serviceSlug}</span>
+                                <h5 className="text-xs font-bold text-white truncate">{ord.serviceName}</h5>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${badge.bg}`}>
+                                {badge.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Direct Agency Assistance Box */}
+                  <div className="p-5 rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                        DB
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">DataBaj স্পেশালিস্ট সাপোর্ট</h4>
+                        <p className="text-[10px] text-zinc-400">জরুরি ক্যাম্পেইন বা ওয়েবসাইট ইস্যুতে সরাসরি যোগাযোগ করুন</p>
+                      </div>
+                    </div>
+                    <div className="pt-1 flex items-center gap-2">
+                      <button
+                        onClick={() => setIsTicketModalOpen(true)}
+                        className="flex-1 py-2 px-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold transition text-center cursor-pointer"
+                      >
+                        সাপোর্ট টিকিট খুলুন
+                      </button>
+                      <button
+                        onClick={() => handleTabChange('tasks')}
+                        className="flex-1 py-2 px-3 rounded-xl bg-teal-600/20 hover:bg-teal-600/30 text-teal-400 border border-teal-500/30 text-xs font-bold transition text-center cursor-pointer"
+                      >
+                        অ্যাডমিন টাস্ক দিন
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 1: CAMPAIGN AUDITS */}
           {activeTab === 'audits' && (
             <div className="space-y-6 max-w-7xl mx-auto">

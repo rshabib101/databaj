@@ -23,6 +23,8 @@ import {
   Users,
   FileSpreadsheet,
   UserCheck,
+  Megaphone,
+  Heart,
   Clock,
   UserX,
   MessageSquare,
@@ -48,6 +50,14 @@ import {
   ExternalLink,
   ClipboardList,
   RefreshCw,
+  LayoutDashboard,
+  BarChart3,
+  ShoppingBag,
+  ArrowRight,
+  ArrowUpRight,
+  TrendingUp,
+  Zap,
+  Activity,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -59,8 +69,41 @@ export default function AdminPage() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [adminSidebarCollapsed, setAdminSidebarCollapsed] = useState(false);
 
-  // Active Tab: 'campaigns' | 'services' | 'clients' | 'consultations' | 'founder' | 'settings'
-  const [activeTab, setActiveTab] = useState('campaigns');
+  const ADMIN_VALID_TABS = ['overview', 'campaigns', 'clients', 'consultations', 'services', 'founder', 'settings', 'tickets', 'credentials', 'tasks', 'client-ad'];
+
+  // Active Tab: 'overview' | 'campaigns' | 'services' | 'clients' | 'consultations' | 'founder' | 'settings' | 'tickets' | 'credentials' | 'tasks'
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const handleTabChange = useCallback((newTab) => {
+    if (!ADMIN_VALID_TABS.includes(newTab)) return;
+    setActiveTab(newTab);
+    const url = newTab === 'overview' ? '/admin' : `/admin?tab=${newTab}`;
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ tab: newTab }, '', url);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncTabFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const pathTab = pathParts[0] === 'admin' && pathParts[1] ? pathParts[1] : null;
+
+      const targetTab = tabParam || pathTab;
+      if (targetTab && ADMIN_VALID_TABS.includes(targetTab)) {
+        setActiveTab(targetTab);
+      } else {
+        setActiveTab('overview');
+      }
+    };
+
+    syncTabFromUrl();
+    window.addEventListener('popstate', syncTabFromUrl);
+    return () => window.removeEventListener('popstate', syncTabFromUrl);
+  }, []);
 
   // Clients & Campaigns state
   const [clients, setClients] = useState([]);
@@ -152,6 +195,28 @@ export default function AdminPage() {
   const [adminTaskClientFilter, setAdminTaskClientFilter] = useState('all');
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
   const [adminFeedbackInputs, setAdminFeedbackInputs] = useState({});
+
+  // Client Dashboard Ad Banner state (Super Admin Control)
+  const [clientAd, setClientAd] = useState({
+    isActive: true,
+    badge: '🔥 স্পেশাল অফার ও নতুন সার্ভিস',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+    headline: 'আপনার বিজনেসের জন্য মেটা কনভার্সন এপিআই (CAPI) ও সার্ভার-সাইড ট্র্যাকিং!',
+    subHeadline: 'অ্যাড ব্লকার ও iOS ১৪ আপডেটের পরেও ১০০% নিখুঁত ডেটা ক্যাপচার করুন এবং বিজ্ঞাপনের আরওএএস (ROAS) বাড়ান।',
+    offerPoints: [
+      '১০০% ইভেন্ট ম্যাচ কোয়ালিটি গ্যারান্টি',
+      'ক্লাউড সার্ভার ও স্ট্যাগিং সেটআপ',
+      'ফ্রি ৭ দিনের লাইভ মনিটরিং ও অডিট',
+      '২৪/৭ ডেডিকেটেড ইঞ্জিনিয়ার সাপোর্ট',
+    ],
+    orderBtnText: 'অর্ডার করতে ক্লিক করুন',
+    orderBtnLink: '/#services',
+    interests: [],
+  });
+  const [offerPointsInput, setOfferPointsInput] = useState('');
+  const [loadingClientAd, setLoadingClientAd] = useState(false);
+  const [savingClientAd, setSavingClientAd] = useState(false);
+  const [clientAdSuccessMsg, setClientAdSuccessMsg] = useState('');
 
   // Super Admin Security state (Gmail & Password change)
   const [adminSecurityModalOpen, setAdminSecurityModalOpen] = useState(false);
@@ -767,6 +832,103 @@ export default function AdminPage() {
     }
   };
 
+  // Fetch Client Ad Banner
+  const refreshClientAd = useCallback(async () => {
+    setLoadingClientAd(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
+      const res = await fetch('/api/admin/client-ad', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (data.success && data.ad) {
+        setClientAd(data.ad);
+        setOfferPointsInput((data.ad.offerPoints || []).join('\n'));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingClientAd(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.role !== 'super_admin') return;
+    refreshClientAd();
+  }, [currentUser, refreshClientAd]);
+
+  // Save Client Ad Banner
+  const handleSaveClientAd = async (e) => {
+    if (e) e.preventDefault();
+    setSavingClientAd(true);
+    setClientAdSuccessMsg('');
+
+    try {
+      const pointsArray = offerPointsInput
+        .split('\n')
+        .map((p) => p.trim())
+        .filter(Boolean);
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
+      const res = await fetch('/api/admin/client-ad', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          ...clientAd,
+          offerPoints: pointsArray,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setClientAd(data.ad);
+        setOfferPointsInput((data.ad.offerPoints || []).join('\n'));
+        setClientAdSuccessMsg('ক্লায়েন্ট ড্যাশবোর্ড বিজ্ঞাপন সফলভাবে আপডেট ও সংরক্ষিত হয়েছে!');
+        setTimeout(() => setClientAdSuccessMsg(''), 4000);
+      } else {
+        alert(data.message || 'সংরক্ষণ ব্যর্থ হয়েছে');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('সার্ভার এরর হয়েছে');
+    } finally {
+      setSavingClientAd(false);
+    }
+  };
+
+  // Quick Toggle Ad Active/Inactive
+  const handleToggleClientAd = async () => {
+    const newStatus = !clientAd.isActive;
+    setClientAd((prev) => ({ ...prev, isActive: newStatus }));
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('databaj_token') : null;
+      const res = await fetch('/api/admin/client-ad', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          ...clientAd,
+          isActive: newStatus,
+          offerPoints: offerPointsInput.split('\n').map((p) => p.trim()).filter(Boolean),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClientAd(data.ad);
+        setClientAdSuccessMsg(newStatus ? 'বিজ্ঞাপনটি এখন লাইভ সক্রিয় আছে!' : 'বিজ্ঞাপনটি সাময়িকভাবে বন্ধ (Off) করা হয়েছে।');
+        setTimeout(() => setClientAdSuccessMsg(''), 4000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Logout
   const handleLogout = async () => {
     try {
@@ -1044,10 +1206,48 @@ export default function AdminPage() {
             </span>
           )}
 
+          {/* Option 0: Dashboard Overview */}
+          <button
+            onClick={() => {
+              handleTabChange('overview');
+              setMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
+              activeTab === 'overview'
+                ? 'bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/20'
+                : 'bg-zinc-900/60 text-zinc-300 hover:bg-zinc-900 hover:text-white border-zinc-850'
+            } ${adminSidebarCollapsed ? 'md:justify-center md:p-3' : 'justify-between'}`}
+            title="ড্যাশবোর্ড ওভারভিউ"
+          >
+            <div className="flex items-center gap-2.5">
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              {!adminSidebarCollapsed && (
+                <div className="text-left">
+                  <span className="block">ড্যাশবোর্ড ওভারভিউ</span>
+                  <span className={`text-[10px] font-normal block ${activeTab === 'overview' ? 'text-black/80 font-medium' : 'text-zinc-500'}`}>
+                    Command Center
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {!adminSidebarCollapsed && (
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                  activeTab === 'overview'
+                    ? 'bg-black/20 text-black font-bold'
+                    : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                }`}
+              >
+                Live
+              </span>
+            )}
+          </button>
+
           {/* Option 1: Client Company & Campaign Audit */}
           <button
             onClick={() => {
-              setActiveTab('campaigns');
+              handleTabChange('campaigns');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1085,7 +1285,7 @@ export default function AdminPage() {
           {/* Option 2: Client Approvals & Access Control */}
           <button
             onClick={() => {
-              setActiveTab('clients');
+              handleTabChange('clients');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1129,7 +1329,7 @@ export default function AdminPage() {
           {/* Option 3: Orders & Consultations */}
           <button
             onClick={() => {
-              setActiveTab('consultations');
+              handleTabChange('consultations');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1173,7 +1373,7 @@ export default function AdminPage() {
           {/* Option 4: Dynamic Services Manager */}
           <button
             onClick={() => {
-              setActiveTab('services');
+              handleTabChange('services');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1211,7 +1411,7 @@ export default function AdminPage() {
           {/* Option 5: Founder & CEO Profile Manager */}
           <button
             onClick={() => {
-              setActiveTab('founder');
+              handleTabChange('founder');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1249,7 +1449,7 @@ export default function AdminPage() {
           {/* Option 6: Agency Contact & Site Settings */}
           <button
             onClick={() => {
-              setActiveTab('settings');
+              handleTabChange('settings');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1287,7 +1487,7 @@ export default function AdminPage() {
           {/* Option 7: Client Support Tickets Inbox */}
           <button
             onClick={() => {
-              setActiveTab('tickets');
+              handleTabChange('tickets');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1329,7 +1529,7 @@ export default function AdminPage() {
           {/* Option 8: Client Credentials Vault */}
           <button
             onClick={() => {
-              setActiveTab('credentials');
+              handleTabChange('credentials');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1367,7 +1567,7 @@ export default function AdminPage() {
           {/* Option 9: Task from Client */}
           <button
             onClick={() => {
-              setActiveTab('tasks');
+              handleTabChange('tasks');
               setMobileSidebarOpen(false);
             }}
             className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
@@ -1402,6 +1602,47 @@ export default function AdminPage() {
                 {adminTasks.filter((t) => t.status === 'pending').length > 0
                   ? `${adminTasks.filter((t) => t.status === 'pending').length} পেন্ডিং`
                   : `${adminTasks.length} টাস্ক`}
+              </span>
+            )}
+          </button>
+
+          {/* Option 10: Client Dashboard Ad Banner Control */}
+          <button
+            onClick={() => {
+              handleTabChange('client-ad');
+              setMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
+              activeTab === 'client-ad'
+                ? 'bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/20'
+                : 'bg-zinc-900/60 text-zinc-300 hover:bg-zinc-900 hover:text-white border-zinc-850'
+            } ${adminSidebarCollapsed ? 'md:justify-center md:p-3' : 'justify-between'}`}
+            title="ক্লায়েন্ট ড্যাশবোর্ড বিজ্ঞাপন ও অফার ব্যানার"
+          >
+            <div className="flex items-center gap-2.5">
+              <Megaphone className="w-4 h-4 shrink-0 text-pink-400" />
+              {!adminSidebarCollapsed && (
+                <div className="text-left">
+                  <span className="block">ক্লায়েন্ট অফার ও ব্যানার</span>
+                  <span className={`text-[10px] font-normal block ${activeTab === 'client-ad' ? 'text-black/80 font-medium' : 'text-zinc-500'}`}>
+                    Promo Ad & Interests
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {!adminSidebarCollapsed && (
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                  activeTab === 'client-ad'
+                    ? 'bg-black/20 text-black font-bold'
+                    : clientAd.isActive
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold'
+                    : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
+                }`}
+              >
+                {clientAd.isActive ? 'Active' : 'Off'}
+                {clientAd.interests?.length > 0 && ` (${clientAd.interests.length})`}
               </span>
             )}
           </button>
@@ -1484,6 +1725,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               <span className="text-xs sm:text-sm font-bold text-white">
+                {activeTab === 'overview' && 'সুপার অ্যাডমিন কমান্ড সেন্টার ও সিস্টেম ওভারভিউ'}
                 {activeTab === 'campaigns' && 'ক্লায়েন্ট কোম্পানি ও ক্যাম্পেইন অডিট'}
                 {activeTab === 'clients' && 'ক্লায়েন্ট অনুমোদন ও এক্সেস কন্ট্রোল'}
                 {activeTab === 'consultations' && 'অর্ডার ও কনসালটেশন ম্যানেজমেন্ট'}
@@ -1493,6 +1735,7 @@ export default function AdminPage() {
                 {activeTab === 'tickets' && 'ক্লায়েন্ট সাপোর্ট টিকিট ইনবক্স'}
                 {activeTab === 'credentials' && 'ক্লায়েন্ট ক্রেডেনশিয়ালস ভল্ট'}
                 {activeTab === 'tasks' && 'Task from Client (ক্লায়েন্ট টাস্ক ও ওয়ার্কশিট)'}
+                {activeTab === 'client-ad' && 'ক্লায়েন্ট ড্যাশবোর্ড বিজ্ঞাপন ও অফার ব্যানার কন্ট্রোল'}
               </span>
             </div>
           </div>
@@ -1519,6 +1762,836 @@ export default function AdminPage() {
             </span>
           </div>
         </div>
+
+        {/* TAB 0: SUPER ADMIN COMMAND CENTER (DASHBOARD OVERVIEW) */}
+        {activeTab === 'overview' && (
+          <div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto w-full animate-fadeIn">
+            {/* Top Super Admin Command Hero Banner */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 p-6 sm:p-8 shadow-2xl">
+              {/* Dynamic Animated Ambient Glow */}
+              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-gradient-to-br from-amber-500/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none animate-pulse" />
+              <div className="absolute bottom-0 left-1/4 -mb-12 w-80 h-80 bg-gradient-to-tr from-blue-500/15 via-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-3 max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold shadow-sm">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                      </span>
+                      সুপার অ্যাডমিন রুট এক্সেস
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold">
+                      সার্ভার লাইভ ও সুরক্ষিত
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-zinc-800/80 text-zinc-400 text-xs font-mono">
+                      DataBaj Central CMS
+                    </span>
+                  </div>
+
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                    স্বাগতম, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-300 to-emerald-400">{currentUser?.name || 'Super Admin'}</span>! ⚡
+                  </h1>
+                  <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                    এটি আপনার ফুল-সিস্টেম কন্ট্রোল সেন্টার। এখান থেকে সকল ক্লায়েন্ট কোম্পানি, ক্যাম্পেইন অডিট ডায়াগনস্টিকস, লাইভ অর্ডার, সাপোর্ট ইনবক্স, মাস্টার ক্রেডেনশিয়াল ভল্ট এবং হোমপেজ কনটেন্ট এক নজরে পর্যবেক্ষণ ও পরিচালনা করুন।
+                  </p>
+                </div>
+
+                {/* Hero Quick Command Buttons */}
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => setIsAuditModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>নতুন অডিট রিপোর্ট</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingService(null);
+                      setServiceModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-zinc-800 hover:border-emerald-500/40 font-bold text-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <Layers className="w-4 h-4" />
+                    <span>নতুন সার্ভিস যোগ</span>
+                  </button>
+                  <Link
+                    href="/"
+                    target="_blank"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 font-bold text-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <Globe className="w-4 h-4 text-blue-400" />
+                    <span>লাইভ ওয়েবসাইট</span>
+                    <ExternalLink className="w-3 h-3 text-zinc-500" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* HIGH IMPACT ANIMATED CARDS GRID - 8 CORE FEATURES */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {/* 1. Clients & Access Control Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-purple-500/10 hover:border-purple-500/40 flex flex-col justify-between">
+                {/* Floating ambient orb */}
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-purple-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-indigo-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-purple-500/10">
+                      <UserCheck className="w-6 h-6" />
+                    </div>
+                    {pendingClients.length > 0 ? (
+                      <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        {pendingClients.length} অনুমোদন বাকি
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        সব ভেরিফাইড
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">ক্লায়েন্ট কোম্পানি ও এক্সেস</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{clients.length}</span>
+                      <span className="text-xs text-zinc-500">টি কোম্পানি</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>সক্রিয় কোম্পানি</span>
+                      <span className="font-bold text-emerald-400 font-mono">{activeClients.length} টি</span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>পেন্ডিং অনুমোদন</span>
+                      <span className="font-bold text-amber-400 font-mono">{pendingClients.length} টি</span>
+                    </div>
+                    {/* Animated Progress Bar */}
+                    <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden mt-2">
+                      <div
+                        className="bg-gradient-to-r from-purple-500 to-emerald-400 h-1.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, Math.round(((activeClients.length || 1) / (clients.length || 1)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('clients')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>ক্লায়েন্ট এক্সেস দেখুন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] text-zinc-500 font-mono">আইডি কন্ট্রোল</span>
+                </div>
+              </div>
+
+              {/* 2. Campaign Audits & Ad Spend Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-emerald-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-emerald-500/10">
+                      <BarChart3 className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      ক্যাম্পেইন অডিট
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">মেটা অডিট রেকর্ডস</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{campaigns.length}</span>
+                      <span className="text-xs text-zinc-500">টি রিপোর্ট</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>মোট ট্র্যাকড স্পেন্ড</span>
+                      <span className="font-bold text-emerald-400 font-mono">${totalSpendAll.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>হাই-স্কোরিং (৮০+)</span>
+                      <span className="font-bold text-zinc-200 font-mono">
+                        {campaigns.filter((c) => (c.overallScore || 0) >= 80).length} টি
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden mt-2">
+                      <div
+                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, Math.round(((campaigns.filter((c) => (c.overallScore || 0) >= 80).length || 1) / (campaigns.length || 1)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('campaigns')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>অডিট ডাটাবেস দেখুন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsAuditModalOpen(true)}
+                    className="p-1.5 rounded-lg bg-zinc-900 hover:bg-emerald-500 hover:text-black text-zinc-400 transition cursor-pointer"
+                    title="নতুন অডিট যোগ করুন"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Orders & Consultations Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-500/40 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-blue-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500/20 to-cyan-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-blue-500/10">
+                      <ShoppingBag className="w-6 h-6" />
+                    </div>
+                    {consultations.filter((c) => c.status === 'pending').length > 0 ? (
+                      <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                        {consultations.filter((c) => c.status === 'pending').length} নতুন অর্ডার
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-400">
+                        অল আপ-টু-ডেট
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">অর্ডার ও কনসালটেশন</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{consultations.length}</span>
+                      <span className="text-xs text-zinc-500">টি সার্ভিস অর্ডার</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>পেন্ডিং বুকিং</span>
+                      <span className="font-bold text-amber-400 font-mono">
+                        {consultations.filter((c) => c.status === 'pending').length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>কনভার্টেড / চলমান</span>
+                      <span className="font-bold text-emerald-400 font-mono">
+                        {consultations.filter((c) => c.status === 'converted' || c.status === 'reviewing' || c.status === 'contacted').length} টি
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden mt-2">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, Math.round(((consultations.filter((c) => c.status === 'converted').length || 1) / (consultations.length || 1)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('consultations')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>অর্ডার ম্যানেজ করুন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] text-zinc-500 font-mono">কনসালটেশন</span>
+                </div>
+              </div>
+
+              {/* 4. Support Tickets Inbox Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-cyan-500/10 hover:border-cyan-500/40 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-cyan-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-cyan-500/10">
+                      <LifeBuoy className="w-6 h-6" />
+                    </div>
+                    {adminTickets.filter((t) => t.status === 'open').length > 0 ? (
+                      <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-bounce">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                        {adminTickets.filter((t) => t.status === 'open').length} ওপেন টিকিট
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        জিরো পেন্ডিং
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">সাপোর্ট টিকিট ইনবক্স</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{adminTickets.length}</span>
+                      <span className="text-xs text-zinc-500">টি কনভারসেশন</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>ওপেন / জরুরি টিকিট</span>
+                      <span className={`font-bold font-mono ${adminTickets.filter((t) => t.status === 'open').length > 0 ? 'text-rose-400' : 'text-zinc-400'}`}>
+                        {adminTickets.filter((t) => t.status === 'open').length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>সমাধানকৃত</span>
+                      <span className="font-bold text-emerald-400 font-mono">
+                        {adminTickets.filter((t) => t.status === 'resolved' || t.status === 'closed').length} টি
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden mt-2">
+                      <div
+                        className="bg-gradient-to-r from-cyan-500 to-blue-400 h-1.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, Math.round(((adminTickets.filter((t) => t.status === 'resolved' || t.status === 'closed').length || 1) / (adminTickets.length || 1)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('tickets')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>ইনবক্স রিপ্লাই দিন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] text-zinc-500 font-mono">লাইভ চ্যাট</span>
+                </div>
+              </div>
+
+              {/* 5. Master Credential Vault Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-amber-500/10 hover:border-amber-500/40 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-amber-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-amber-500/10">
+                      <KeyRound className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      AES-256 ভল্ট
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">ক্লায়েন্ট ক্রেডেনশিয়ালস ভল্ট</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{adminCredentials.length}</span>
+                      <span className="text-xs text-zinc-500">টি সুরক্ষিত লগইন</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>Meta BM লগইন</span>
+                      <span className="font-bold text-blue-400 font-mono">
+                        {adminCredentials.filter((c) => c.platform === 'facebook_bm').length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>ওয়েবসাইট / শপিফাই</span>
+                      <span className="font-bold text-emerald-400 font-mono">
+                        {adminCredentials.filter((c) => c.platform === 'website_admin').length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>গুগল ও অন্যান্য</span>
+                      <span className="font-bold text-amber-400 font-mono">
+                        {adminCredentials.filter((c) => c.platform !== 'facebook_bm' && c.platform !== 'website_admin').length} টি
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('credentials')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>মাস্টার ভল্ট খুলুন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] text-zinc-500 font-mono">এনক্রিপ্টেড</span>
+                </div>
+              </div>
+
+              {/* 6. Task from Client Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-teal-500/10 hover:border-teal-500/40 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-teal-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-teal-500/10">
+                      <ClipboardList className="w-6 h-6" />
+                    </div>
+                    {adminTasks.filter((t) => t.status === 'pending').length > 0 ? (
+                      <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        {adminTasks.filter((t) => t.status === 'pending').length} টাস্ক পেন্ডিং
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-400">
+                        টাস্ক রানিং
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Task from Client (টাস্ক)</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{adminTasks.length}</span>
+                      <span className="text-xs text-zinc-500">টি অ্যাক্টিভ টাস্ক</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>ইন-রিভিউ / রানিং</span>
+                      <span className="font-bold text-teal-400 font-mono">
+                        {adminTasks.filter((t) => t.status === 'in_review').length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>সম্পন্ন (Done)</span>
+                      <span className="font-bold text-emerald-400 font-mono">
+                        {adminTasks.filter((t) => t.status === 'done').length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-500 text-[11px]">
+                      <span>Ads: {adminTasks.filter((t) => t.taskType === 'ads').length} টি</span>
+                      <span>Web: {adminTasks.filter((t) => t.taskType === 'web').length} টি</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('tasks')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-400 hover:text-teal-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>টাস্ক বোর্ড দেখুন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] text-zinc-500 font-mono">ওয়ার্কফ্লো</span>
+                </div>
+              </div>
+
+              {/* 7. Dynamic Services CMS Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-rose-500/10 hover:border-rose-500/40 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-rose-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500/20 to-pink-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-rose-500/10">
+                      <Layers className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      হোমপেজ CMS
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">ডাইনামিক সার্ভিস ম্যানেজার</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white font-mono">{services.length}</span>
+                      <span className="text-xs text-zinc-500">টি কনফিগার করা সার্ভিস</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>সক্রিয় লাইভ কার্ড</span>
+                      <span className="font-bold text-emerald-400 font-mono">
+                        {services.filter((s) => s.isActive).length} টি
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>ড্রাফট / নিষ্ক্রিয়</span>
+                      <span className="font-bold text-zinc-500 font-mono">
+                        {services.filter((s) => !s.isActive).length} টি
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden mt-2">
+                      <div
+                        className="bg-gradient-to-r from-rose-500 to-pink-400 h-1.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, Math.round(((services.filter((s) => s.isActive).length || 1) / (services.length || 1)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('services')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
+                  >
+                    <span>সার্ভিস CMS খুলুন</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingService(null);
+                      setServiceModalOpen(true);
+                    }}
+                    className="p-1.5 rounded-lg bg-zinc-900 hover:bg-rose-500 hover:text-white text-zinc-400 transition cursor-pointer"
+                    title="নতুন সার্ভিস তৈরি করুন"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 8. Agency Contact & Founder Settings Card */}
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-black border border-zinc-800/80 p-5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-zinc-500/10 hover:border-zinc-700 flex flex-col justify-between">
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-zinc-500/15 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-zinc-800 to-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-300 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                      <Settings className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      সিস্টেম সেটিংস
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">সাইট ও ফাউন্ডার কন্ট্রোল</span>
+                    <h3 className="text-sm font-bold text-white truncate">
+                      {founderProfile.founderName || 'Founder & CEO'}
+                    </h3>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>হটলাইন</span>
+                      <span className="font-mono text-zinc-300 text-[11px]">{siteSettings.phone || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>হোয়াটসঅ্যাপ</span>
+                      <span className="font-mono text-emerald-400 text-[11px]">{siteSettings.whatsapp || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>সাপোর্ট ইমেইল</span>
+                      <span className="font-mono text-zinc-300 text-[11px] truncate max-w-[130px]">{siteSettings.email || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleTabChange('settings')}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <span>সাইট সেটিংস</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleTabChange('founder')}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                  >
+                    <span>ফাউন্ডার প্রোফাইল</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 7: Client Dashboard Promo Ad & Interests */}
+              <div className="group p-6 rounded-3xl bg-zinc-950 border border-zinc-800 hover:border-pink-500/40 transition-all duration-300 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-full blur-2xl group-hover:bg-pink-500/10 transition-colors" />
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform">
+                      <Megaphone className="w-6 h-6" />
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                      clientAd.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                    }`}>
+                      {clientAd.isActive ? '● Live Active' : '○ Off'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">ক্লায়েন্ট অফার ও ব্যানার</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl sm:text-4xl font-black text-white font-mono">
+                        {clientAd.interests?.length || 0}
+                      </span>
+                      <span className="text-xs text-zinc-500">জন ক্লায়েন্ট আগ্রহী</span>
+                    </div>
+                  </div>
+
+                  {/* Sub-breakdown */}
+                  <div className="space-y-2 pt-3 border-t border-zinc-900 text-xs">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>ব্যানার স্ট্যাটাস</span>
+                      <span className={`font-mono font-bold text-[11px] ${clientAd.isActive ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                        {clientAd.isActive ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>অফার পয়েন্ট</span>
+                      <span className="font-mono text-zinc-300 text-[11px]">
+                        {clientAd.offerPoints?.length || 0} টি রো পয়েন্ট
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>ক্লিক লিঙ্ক</span>
+                      <span className="font-mono text-pink-400 text-[11px] truncate max-w-[130px]">
+                        {clientAd.orderBtnLink || 'None'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                  <button
+                    onClick={() => handleTabChange('client-ad')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer"
+                  >
+                    <span>অ্যাড ও আগ্রহীদের তালিকা</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleToggleClientAd}
+                    className="text-[10px] font-mono px-2 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition cursor-pointer"
+                  >
+                    {clientAd.isActive ? 'বন্ধ করুন' : 'চালু করুন'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* QUICK ACTIONS & LIVE QUEUES SECTION */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Urgent Pending Approvals & Client Queue */}
+              <div className="lg:col-span-6 p-6 rounded-3xl bg-zinc-950/90 border border-zinc-800/80 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <UserCheck className="w-5 h-5 text-purple-400" />
+                    <h3 className="text-sm font-bold text-white">ক্লায়েন্ট অনুমোদন ও নতুন সাইন-আপ</h3>
+                  </div>
+                  <button
+                    onClick={() => handleTabChange('clients')}
+                    className="text-xs text-purple-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    সব দেখুন ({clients.length})
+                  </button>
+                </div>
+
+                {pendingClients.length > 0 ? (
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                        জরুরি: {pendingClients.length}টি ক্লায়েন্ট অ্যাকাউন্ট অনুমোদনের অপেক্ষায়
+                      </span>
+                      <button
+                        onClick={() => handleTabChange('clients')}
+                        className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition cursor-pointer"
+                      >
+                        অনুমোদন দিন
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {pendingClients.slice(0, 3).map((cl) => (
+                        <div key={cl._id} className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-bold text-white block">{cl.companyName || cl.name}</span>
+                            <span className="text-[10px] text-zinc-400 font-mono">{cl.email}</span>
+                          </div>
+                          <button
+                            onClick={() => setViewClientModal(cl)}
+                            className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-semibold transition cursor-pointer"
+                          >
+                            বিস্তারিত
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      সকল ক্লায়েন্ট অ্যাকাউন্ট ভেরিফাইড এবং কোনো পেন্ডিং অনুমোদন নেই
+                    </span>
+                    <button
+                      onClick={() => handleTabChange('clients')}
+                      className="text-[11px] font-bold underline cursor-pointer"
+                    >
+                      লিস্ট দেখুন
+                    </button>
+                  </div>
+                )}
+
+                {/* Recent Verified Clients Snapshot */}
+                <div className="space-y-2 pt-1">
+                  <span className="text-[11px] font-mono text-zinc-500 uppercase font-semibold block">সাম্প্রতিক ক্লায়েন্ট কোম্পানি</span>
+                  {clients.slice(0, 3).map((cl) => (
+                    <div
+                      key={cl._id}
+                      onClick={() => {
+                        setSelectedClientId(cl._id);
+                        handleTabChange('campaigns');
+                      }}
+                      className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-850 hover:border-emerald-500/40 transition flex items-center justify-between cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center text-white font-bold text-xs">
+                          {(cl.companyName || cl.name || 'C').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition truncate max-w-[180px]">
+                            {cl.companyName || cl.name}
+                          </h4>
+                          <span className="text-[10px] text-zinc-400 font-mono">{cl.email}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                          cl.isVerified ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {cl.isVerified ? 'Active' : 'Pending'}
+                        </span>
+                        <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: Live Orders & Urgent Support Inquiries */}
+              <div className="lg:col-span-6 p-6 rounded-3xl bg-zinc-950/90 border border-zinc-800/80 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <ShoppingBag className="w-5 h-5 text-blue-400" />
+                    <h3 className="text-sm font-bold text-white">সাম্প্রতিক অর্ডার ও সাপোর্ট রিকোয়েস্ট</h3>
+                  </div>
+                  <button
+                    onClick={() => handleTabChange('consultations')}
+                    className="text-xs text-blue-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    সব অর্ডার ({consultations.length})
+                  </button>
+                </div>
+
+                {/* Orders Queue */}
+                <div className="space-y-2.5">
+                  <span className="text-[11px] font-mono text-zinc-500 uppercase font-semibold block">নতুন সার্ভিস বুকিং</span>
+                  {consultations.length === 0 ? (
+                    <p className="text-xs text-zinc-500 py-3">এখনো কোনো সার্ভিস অর্ডার আসেনি</p>
+                  ) : (
+                    consultations.slice(0, 3).map((ord) => (
+                      <div
+                        key={ord._id}
+                        onClick={() => handleTabChange('consultations')}
+                        className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-850 hover:border-blue-500/40 transition flex items-center justify-between cursor-pointer group"
+                      >
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[10px] font-mono uppercase font-bold text-blue-400 block">{ord.serviceSlug || 'Service'}</span>
+                          <h4 className="text-xs font-bold text-white group-hover:text-blue-300 transition truncate max-w-[220px]">
+                            {ord.serviceName}
+                          </h4>
+                          <span className="text-[10px] text-zinc-400 font-mono">{ord.phone || ord.email || 'যোগাযোগ রেকর্ড'}</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                          ord.status === 'pending'
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
+                            : ord.status === 'converted'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                            : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                        }`}>
+                          {ord.status || 'Pending'}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Open Tickets Desk */}
+                <div className="pt-2 space-y-2.5 border-t border-zinc-900">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono text-zinc-500 uppercase font-semibold">সাপোর্ট টিকিট ইনবক্স</span>
+                    <button
+                      onClick={() => handleTabChange('tickets')}
+                      className="text-xs text-cyan-400 hover:underline font-semibold cursor-pointer"
+                    >
+                      ইনবক্স খুলুন
+                    </button>
+                  </div>
+                  {adminTickets.filter((t) => t.status === 'open').length > 0 ? (
+                    <div className="space-y-2">
+                      {adminTickets.filter((t) => t.status === 'open').slice(0, 2).map((tk) => (
+                        <div
+                          key={tk._id}
+                          onClick={() => {
+                            setSelectedAdminTicket(tk);
+                            handleTabChange('tickets');
+                          }}
+                          className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 hover:border-rose-400 transition flex items-center justify-between cursor-pointer group"
+                        >
+                          <div className="min-w-0">
+                            <span className="text-[10px] text-rose-400 font-mono font-bold block">জরুরি মেসেজ</span>
+                            <h5 className="text-xs font-bold text-white group-hover:text-rose-300 transition truncate max-w-[220px]">
+                              {tk.subject}
+                            </h5>
+                          </div>
+                          <span className="px-2 py-1 rounded-lg bg-rose-500 hover:bg-rose-400 text-white text-[10px] font-bold transition">
+                            উত্তর দিন
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      কোনো অমীমাংসিত সাপোর্ট টিকিট নেই
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TAB 1: CLIENT COMPANIES & CAMPAIGN AUDITS */}
         {activeTab === 'campaigns' && (
@@ -3477,6 +4550,335 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+          </main>
+        )}
+
+        {/* TAB 10: CLIENT DASHBOARD AD BANNER & PROMO MANAGER */}
+        {activeTab === 'client-ad' && (
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto w-full animate-fadeIn">
+            {/* Header row with Status & 1-Click Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-950 p-6 rounded-3xl border border-zinc-850 shadow-xl">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-7 h-7 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+                    <Megaphone className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs uppercase font-mono font-bold tracking-wider text-pink-400">
+                    Client Dashboard Promotional Banner
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-white">ক্লায়েন্ট ড্যাশবোর্ড বিজ্ঞাপন ও অফার ব্যানার</h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  সমস্ত ক্লায়েন্টের ড্যাশবোর্ডের শুরুতে আই-ক্যাচিং অ্যাড শো হবে। এখান থেকে ইমেজ, অফার পয়েন্ট, লিঙ্ক ও অন/অফ নিয়ন্ত্রণ করুন।
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* 1-Click Live On/Off Switch */}
+                <button
+                  type="button"
+                  onClick={handleToggleClientAd}
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-lg cursor-pointer ${
+                    clientAd.isActive
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                      : 'bg-zinc-850 hover:bg-zinc-800 text-zinc-400 border border-zinc-700'
+                  }`}
+                >
+                  <span className={`w-2.5 h-2.5 rounded-full ${clientAd.isActive ? 'bg-black animate-ping' : 'bg-zinc-500'}`} />
+                  <span>{clientAd.isActive ? 'বিজ্ঞাপন লাইভ চালু আছে (Active)' : 'বিজ্ঞাপন বন্ধ আছে (Turn On)'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Notification alert message */}
+            {clientAdSuccessMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{clientAdSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* 2-Column Grid: Left Edit Form + Right Live Preview & Interested Clients */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column (Cols 1-7): Ad Edit Form */}
+              <div className="lg:col-span-7 bg-zinc-950 p-6 sm:p-8 rounded-3xl border border-zinc-850 shadow-xl space-y-6">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                  <span className="text-sm font-bold text-white flex items-center gap-2">
+                    <Edit2 className="w-4 h-4 text-emerald-400" />
+                    বিজ্ঞাপনের কন্টেন্ট এডিট করুন
+                  </span>
+                  <span className="text-xs font-mono text-zinc-500">Super Admin CMS</span>
+                </div>
+
+                <form onSubmit={handleSaveClientAd} className="space-y-4">
+                  {/* Badge Text */}
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                      ট্যাগ / ব্যাজ (Badge Text)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 🔥 স্পেশাল অফার ও নতুন সার্ভিস"
+                      value={clientAd.badge || ''}
+                      onChange={(e) => setClientAd({ ...clientAd, badge: e.target.value })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  {/* Banner Image URL */}
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                      ব্যানার ইমেজ লিঙ্ক (Image URL) *
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      placeholder="https://images.unsplash.com/... বা আপনার ইমেজ লিঙ্ক"
+                      value={clientAd.imageUrl || ''}
+                      onChange={(e) => setClientAd({ ...clientAd, imageUrl: e.target.value })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
+                    />
+                    <p className="text-[11px] text-zinc-500 mt-1">
+                      ছবিটি ক্লায়েন্টের কাছে বড় ও হাইলাইট হয়ে প্রদর্শিত হবে।
+                    </p>
+                  </div>
+
+                  {/* Headline */}
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                      মূল হেডলাইন (Headline) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. আপনার বিজনেসের জন্য মেটা কনভার্সন এপিআই (CAPI) ট্র্যাকিং!"
+                      value={clientAd.headline || ''}
+                      onChange={(e) => setClientAd({ ...clientAd, headline: e.target.value })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-bold"
+                    />
+                  </div>
+
+                  {/* Sub-headline */}
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                      সাব-হেডলাইন / বিস্তারিত বিবরণ (Sub-headline)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="সংক্ষিপ্ত বিবরণ যা হেডলাইনের নিচে থাকবে..."
+                      value={clientAd.subHeadline || ''}
+                      onChange={(e) => setClientAd({ ...clientAd, subHeadline: e.target.value })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 resize-none"
+                    />
+                  </div>
+
+                  {/* Offer Points (Row by row) */}
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                      অফার পয়েন্টসমূহ (প্রতি লাইনে ১টি করে লিখুন, রো আকারে দেখাবে)
+                    </label>
+                    <textarea
+                      rows={4}
+                      placeholder="১০০% ইভেন্ট ম্যাচ কোয়ালিটি গ্যারান্টি&#10;ক্লাউড সার্ভার ও স্ট্যাগিং সেটআপ&#10;ফ্রি ৭ দিনের লাইভ মনিটরিং&#10;২৪/৭ ডেডিকেটেড ইঞ্জিনিয়ার সাপোর্ট"
+                      value={offerPointsInput}
+                      onChange={(e) => setOfferPointsInput(e.target.value)}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono leading-relaxed"
+                    />
+                    <p className="text-[11px] text-zinc-500 mt-1">
+                      প্রতিটি নতুন লাইনের পয়েন্ট ক্লায়েন্টের ড্যাশবোর্ডে সারিবদ্ধভাবে (Row) টিকচিহ্ন সহ প্রদর্শিত হবে।
+                    </p>
+                  </div>
+
+                  {/* Order Button Settings */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                        অর্ডার বোতামের লেখা (Button Text)
+                      </label>
+                      <input
+                        type="text"
+                        value={clientAd.orderBtnText || ''}
+                        onChange={(e) => setClientAd({ ...clientAd, orderBtnText: e.target.value })}
+                        placeholder="অর্ডার করতে ক্লিক করুন"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                        ক্লিকেবল লিঙ্ক (Order Link / URL)
+                      </label>
+                      <input
+                        type="text"
+                        value={clientAd.orderBtnLink || ''}
+                        onChange={(e) => setClientAd({ ...clientAd, orderBtnLink: e.target.value })}
+                        placeholder="/#services বা https://..."
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="pt-4 flex items-center justify-end">
+                    <button
+                      type="submit"
+                      disabled={savingClientAd}
+                      className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50"
+                    >
+                      {savingClientAd ? (
+                        <>
+                          <Sparkles className="w-4 h-4 animate-spin" />
+                          <span>সংরক্ষণ হচ্ছে...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>বিজ্ঞাপন সংরক্ষণ ও লাইভ আপডেট করুন</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Right Column (Cols 8-12): Live Preview & Interested Clients Tracker */}
+              <div className="lg:col-span-5 space-y-6">
+                {/* 1. Live Client Preview Card */}
+                <div className="bg-zinc-950 p-5 rounded-3xl border border-zinc-850 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                      লাইভ প্রিভিউ (ক্লায়েন্ট যেভাবে দেখবে)
+                    </span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${clientAd.isActive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-zinc-800 text-zinc-500'}`}>
+                      {clientAd.isActive ? '● Live Visible' : '○ Disabled'}
+                    </span>
+                  </div>
+
+                  {/* Preview Box */}
+                  <div className="p-4 rounded-2xl bg-zinc-900/90 border border-emerald-500/30 space-y-3">
+                    {/* Image Preview */}
+                    <div className="relative w-full h-36 rounded-xl overflow-hidden border border-zinc-800">
+                      {clientAd.imageUrl ? (
+                        <Image
+                          src={clientAd.imageUrl}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xs text-zinc-500">
+                          কোনো ছবি লিঙ্ক দেওয়া হয়নি
+                        </div>
+                      )}
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-bold uppercase">
+                        {clientAd.badge || 'অফার'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-bold text-white line-clamp-2">
+                        {clientAd.headline || 'বিজ্ঞাপনের হেডলাইন'}
+                      </h4>
+                      {clientAd.subHeadline && (
+                        <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">
+                          {clientAd.subHeadline}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Offer points preview */}
+                    <div className="space-y-1.5 pt-1 border-t border-zinc-800">
+                      {offerPointsInput
+                        .split('\n')
+                        .slice(0, 3)
+                        .filter(Boolean)
+                        .map((pt, i) => (
+                          <div key={i} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span className="truncate">{pt}</span>
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Preview Buttons */}
+                    <div className="flex items-center gap-2 pt-2">
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-[10px]">
+                        {clientAd.orderBtnText || 'অর্ডার করুন'}
+                      </span>
+                      <span className="px-3 py-1.5 rounded-xl bg-zinc-800 text-zinc-300 font-bold text-[10px] flex items-center gap-1">
+                        <Heart className="w-3 h-3 text-pink-400" />
+                        আগ্রহী
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Interested Clients Realtime Tracker */}
+                <div className="bg-zinc-950 p-5 rounded-3xl border border-zinc-850 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                        <span>আগ্রহী ক্লায়েন্টদের তালিকা (Interested Clients)</span>
+                      </h3>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                        যেসব ক্লায়েন্ট "I am Interested" বোতামে ক্লিক করেছেন
+                      </p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20 font-mono text-xs font-bold">
+                      {clientAd.interests?.length || 0} জন
+                    </span>
+                  </div>
+
+                  {/* List of interested clients */}
+                  <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    {!clientAd.interests || clientAd.interests.length === 0 ? (
+                      <div className="p-8 text-center text-zinc-500 text-xs bg-zinc-900/40 rounded-2xl border border-zinc-900">
+                        এখনো কোনো ক্লায়েন্ট আগ্রহ প্রকাশ করেননি। নতুন বিজ্ঞাপনটি চালু হলে ক্লায়েন্টরা ক্লিক করবেন।
+                      </div>
+                    ) : (
+                      clientAd.interests.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-850 hover:border-pink-500/30 transition flex items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="space-y-1 truncate">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white truncate">{item.clientName || 'ক্লায়েন্ট'}</span>
+                              <span className="text-[10px] text-emerald-400 font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                                {item.companyName || 'কোম্পানি'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-[11px] text-zinc-400 font-mono">
+                              {item.phone && <span>📞 {item.phone}</span>}
+                              {item.email && <span className="truncate">✉️ {item.email}</span>}
+                            </div>
+                            <span className="text-[10px] text-zinc-500 font-mono block">
+                              🕒 {new Date(item.clickedAt).toLocaleString('bn-BD', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                          </div>
+
+                          {/* Quick Action (WhatsApp / Call) */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {item.phone && (
+                              <a
+                                href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 transition cursor-pointer"
+                                title="হোয়াটসঅ্যাপে মেসেজ পাঠান"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </main>
         )}
       </div>

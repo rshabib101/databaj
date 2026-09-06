@@ -39,6 +39,7 @@ html.light body {
   color: #0f172a !important;
 }
 
+/* Light mode background mappings */
 html.light .bg-black,
 html.light .bg-black\/80,
 html.light .bg-black\/60,
@@ -60,22 +61,27 @@ html.light .bg-zinc-900\/70,
 html.light .bg-zinc-900\/60,
 html.light .bg-zinc-900\/50,
 html.light .bg-zinc-900\/40 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-zinc-850,
+html.light .bg-zinc-800 {
   background-color: #f1f5f9 !important;
 }
 
-html.light .bg-zinc-850 {
-  background-color: #e2e8f0 !important;
-}
-
+/* Light mode border styling */
+html.light .border-zinc-950,
 html.light .border-zinc-900,
 html.light .border-zinc-850,
 html.light .border-zinc-800,
 html.light .border-zinc-800\/90,
 html.light .border-zinc-800\/80,
-html.light .border-zinc-800\/60 {
+html.light .border-zinc-800\/60,
+html.light .border-zinc-700 {
   border-color: #e2e8f0 !important;
 }
 
+/* Light mode typography & high contrast text */
 html.light .text-white {
   color: #0f172a !important;
 }
@@ -87,17 +93,100 @@ html.light .text-zinc-300 {
 }
 
 html.light .text-zinc-400 {
-  color: #475569 !important;
+  color: #334155 !important; /* Slate-700 for high crisp contrast on white */
 }
 
 html.light .text-zinc-500 {
-  color: #64748b !important;
+  color: #64748b !important; /* Slate-500 */
 }
 
 html.light .text-zinc-600 {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 
+/* Neon accents adjusted for light mode legibility */
+html.light .text-emerald-400 {
+  color: #047857 !important; /* Emerald-700 */
+}
+
+html.light .text-emerald-300 {
+  color: #059669 !important; /* Emerald-600 */
+}
+
+html.light .text-blue-400 {
+  color: #1d4ed8 !important; /* Blue-700 */
+}
+
+html.light .text-cyan-400 {
+  color: #0e7490 !important; /* Cyan-700 */
+}
+
+html.light .text-amber-400 {
+  color: #b45309 !important; /* Amber-700 */
+}
+
+html.light .text-purple-400 {
+  color: #6d28d9 !important; /* Purple-700 */
+}
+
+html.light .text-pink-400 {
+  color: #be185d !important; /* Pink-700 */
+}
+
+/* Badge backgrounds in light mode */
+html.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+html.light .bg-blue-500\/10 {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+html.light .bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+html.light .bg-cyan-500\/10 {
+  background-color: rgba(6, 182, 212, 0.12) !important;
+}
+
+html.light .bg-purple-500\/10 {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+}
+
+/* Gradient text adaptation in light mode */
+html.light .bg-gradient-to-r.from-white,
+html.light .bg-gradient-to-r.from-zinc-100 {
+  background-image: linear-gradient(to right, #0f172a, #334155) !important;
+}
+
+/* Buttons that have colored backgrounds must keep their legible text */
+html.light .bg-emerald-500,
+html.light .bg-emerald-400 {
+  color: #022c22 !important;
+  font-weight: 700;
+}
+
+html.light .bg-blue-600,
+html.light .bg-blue-500,
+html.light .bg-indigo-600,
+html.light .bg-violet-600,
+html.light .bg-gradient-to-r.from-emerald-500,
+html.light .bg-gradient-to-tr.from-emerald-500 {
+  color: #ffffff !important;
+}
+
+html.light .bg-blue-600 *,
+html.light .bg-blue-500 *,
+html.light .bg-indigo-600 *,
+html.light button.bg-blue-600,
+html.light a.bg-blue-600,
+html.light button.bg-indigo-600,
+html.light a.bg-indigo-600 {
+  color: #ffffff !important;
+}
+
+/* Inputs & Form Elements */
 html.light input,
 html.light textarea,
 html.light select {
@@ -106,27 +195,25 @@ html.light select {
   border-color: #cbd5e1 !important;
 }
 
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
 html.light input::placeholder,
 html.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-html.light .shadow-2xl {
-  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+/* Shadows and card depth in light mode */
+html.light .shadow-2xl,
+html.light .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
 }
 
-html.light .bg-emerald-500,
-html.light .bg-emerald-400 {
-  color: #000000 !important;
-}
-
-html.light .bg-blue-600,
-html.light .bg-blue-500,
-html.light .bg-indigo-600 {
-  color: #ffffff !important;
-}
-
-html.light .bg-zinc-800 {
-  background-color: #e2e8f0 !important;
+html.light .shadow-inner {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
 }
 

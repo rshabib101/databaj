@@ -136,7 +136,7 @@ export default function HeroSlider() {
           {/* Left Column: Slide Content */}
           <div className="lg:col-span-7 space-y-6">
             {/* Slide Tag */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-300 backdrop-blur-md ${slide.tagColor}">
+            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-300 backdrop-blur-md ${slide.tagColor}`}>
               <Zap className="w-3.5 h-3.5" />
               <span>{slide.tag}</span>
             </div>
