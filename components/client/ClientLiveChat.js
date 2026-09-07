@@ -205,12 +205,7 @@ export default function ClientLiveChat({ currentUser }) {
 
       {/* 2. MESSAGES CONTAINER */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-zinc-950/50">
-        {loading ? (
-          <div className="p-12 text-center text-zinc-500 flex flex-col items-center justify-center gap-2">
-            <Sparkles className="w-6 h-6 animate-spin text-emerald-400" />
-            <span className="text-xs">মেসেজ লোড হচ্ছে...</span>
-          </div>
-        ) : messages.length === 0 ? (
+        {messages.length === 0 ? (
           <div className="p-12 text-center text-zinc-500 flex flex-col items-center justify-center gap-3">
             <div className="w-12 h-12 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
               <MessageSquare className="w-6 h-6 text-emerald-400" />

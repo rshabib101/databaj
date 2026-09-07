@@ -59,7 +59,7 @@ function AdminChatContent() {
   }, []);
 
   // Fetch conversations list
-  const fetchConversations = useCallback(async (isSilent = false) => {
+  const fetchConversations = useCallback(async (isSilent = true) => {
     try {
       if (!isSilent) setLoadingConversations(true);
       const res = await fetch('/api/chat?action=conversations');
@@ -74,11 +74,10 @@ function AdminChatContent() {
     }
   }, []);
 
-  // Fetch messages for selected client
-  const fetchMessages = useCallback(async (clientId, isSilent = false) => {
+  // Fetch messages for selected client silently without wiping UI
+  const fetchMessages = useCallback(async (clientId) => {
     if (!clientId) return;
     try {
-      if (!isSilent) setLoadingMessages(true);
       const res = await fetch(`/api/chat?conversationId=${clientId}`);
       const data = await res.json();
       if (data.success) {
@@ -89,15 +88,13 @@ function AdminChatContent() {
       }
     } catch (err) {
       console.error('Failed to fetch messages:', err);
-    } finally {
-      if (!isSilent) setLoadingMessages(false);
     }
   }, []);
 
-  // Initialize conversations
+  // Initialize conversations once on mount
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    fetchConversations(false);
+  }, []);
 
   // Handle URL param or default selection
   useEffect(() => {
@@ -106,28 +103,26 @@ function AdminChatContent() {
     } else if (conversations.length > 0 && !selectedClientId) {
       setSelectedClientId(conversations[0].client._id);
     }
-  }, [initialClientId, conversations, selectedClientId]);
+  }, [initialClientId, conversations.length]);
 
   // Load messages when selectedClientId changes
   useEffect(() => {
-    if (selectedClientId) {
-      fetchMessages(selectedClientId, false);
-      // Find client info from conversations if available
-      const conv = conversations.find((c) => c.client._id === selectedClientId);
-      if (conv) {
-        setSelectedClient(conv.client);
-      }
-      setTimeout(() => scrollToBottom(false), 200);
+    if (!selectedClientId) return;
+    fetchMessages(selectedClientId);
+    const conv = conversations.find((c) => c.client._id === selectedClientId);
+    if (conv) {
+      setSelectedClient(conv.client);
     }
-  }, [selectedClientId, fetchMessages, conversations, scrollToBottom]);
+    setTimeout(() => scrollToBottom(false), 150);
+  }, [selectedClientId]);
 
-  // Real-time Polling: updates every 1.8 seconds without page reload
+  // Real-time Polling: updates silently every 1.8 seconds in background without any UI reset or reload
   useEffect(() => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
     pollTimerRef.current = setInterval(() => {
       if (selectedClientId) {
-        fetchMessages(selectedClientId, true);
+        fetchMessages(selectedClientId);
       }
       fetchConversations(true);
     }, 1800);
@@ -326,9 +321,13 @@ function AdminChatContent() {
                 <button
                   key={conv.client._id}
                   onClick={() => {
+                    if (selectedClientId === conv.client._id) return;
                     setSelectedClientId(conv.client._id);
                     setSelectedClient(conv.client);
-                    router.replace(`/admin/chat?clientId=${conv.client._id}`);
+                    fetchMessages(conv.client._id);
+                    if (typeof window !== 'undefined') {
+                      window.history.replaceState(null, '', `/admin/chat?clientId=${conv.client._id}`);
+                    }
                   }}
                   className={`w-full p-3.5 flex items-start gap-3 text-left transition-all cursor-pointer ${
                     isSelected
@@ -442,18 +441,13 @@ function AdminChatContent() {
 
             {/* Messages Scroll Area */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-zinc-950/40">
-              {loadingMessages ? (
-                <div className="p-12 text-center text-zinc-500 flex flex-col items-center justify-center gap-2">
-                  <Sparkles className="w-6 h-6 animate-spin text-emerald-400" />
-                  <span className="text-xs">মেসেজ হিস্ট্রি লোড হচ্ছে...</span>
-                </div>
-              ) : messages.length === 0 ? (
+              {messages.length === 0 ? (
                 <div className="p-12 text-center text-zinc-500 flex flex-col items-center justify-center gap-3">
                   <div className="w-12 h-12 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
                     <MessageSquare className="w-6 h-6 text-emerald-400" />
                   </div>
                   <span className="text-xs font-medium">
-                    {selectedClient.companyName}-এর সাথে এখনও কোনো বার্তা বিনিময় হয়নি।
+                    {selectedClient?.companyName || 'ক্লায়েন্ট'}-এর সাথে এখনও কোনো বার্তা বিনিময় হয়নি।
                   </span>
                   <span className="text-[11px] text-zinc-600">
                     নিচে লিখে প্রথম মেসেজ বা ফাইল সেন্ড করুন।
