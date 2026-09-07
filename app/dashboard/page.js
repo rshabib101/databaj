@@ -8,6 +8,8 @@ import AuditReportView from '@/components/AuditReportView';
 import AuditFormModal from '@/components/AuditFormModal';
 import ConsultationModal from '@/components/agency/ConsultationModal';
 import ClientAdBanner from '@/components/ClientAdBanner';
+import ClientNoticeBanner from '@/components/client/ClientNoticeBanner';
+import ClientLiveChat from '@/components/client/ClientLiveChat';
 import {
   Building2,
   Plus,
@@ -53,7 +55,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-const VALID_TABS = ['overview', 'audits', 'orders', 'credentials', 'support', 'tasks', 'ai-copy', 'profile'];
+const VALID_TABS = ['overview', 'chat', 'audits', 'orders', 'credentials', 'support', 'tasks', 'ai-copy', 'profile'];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -376,6 +378,50 @@ export default function DashboardPage() {
 
     return () => clearInterval(interval);
   }, [currentUser, activeTab, refreshTickets]);
+
+  // Active Client Notice state & Unread Live Chat polling
+  const [activeNotice, setActiveNotice] = useState(null);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
+  const [clientUnreadChatCount, setClientUnreadChatCount] = useState(0);
+
+  const fetchClientNotice = useCallback(async () => {
+    try {
+      const res = await fetch('/api/client/notice');
+      const data = await res.json();
+      if (data.success) {
+        setActiveNotice(data.notice);
+      }
+    } catch (e) {
+      // silent
+    }
+  }, []);
+
+  const fetchClientUnreadChatCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chat?action=unread_count');
+      const data = await res.json();
+      if (data.success) {
+        setClientUnreadChatCount(data.unreadCount || 0);
+      }
+    } catch (e) {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchClientNotice();
+    fetchClientUnreadChatCount();
+
+    const interval = setInterval(() => {
+      fetchClientNotice();
+      if (activeTab !== 'chat') {
+        fetchClientUnreadChatCount();
+      }
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [currentUser, activeTab, fetchClientNotice, fetchClientUnreadChatCount]);
 
   // Auto-scroll chat to latest message
   useEffect(() => {
@@ -861,6 +907,23 @@ export default function DashboardPage() {
             </span>
           </div>
 
+          {/* Quick Live Chat Shortcut with unread badge */}
+          <button
+            onClick={() => {
+              handleTabChange('chat');
+              setClientUnreadChatCount(0);
+            }}
+            className="relative p-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 text-zinc-400 hover:text-emerald-400 transition cursor-pointer"
+            title="সুপার এডমিন লাইভ চ্যাট"
+          >
+            <MessageSquare className="w-4 h-4" />
+            {clientUnreadChatCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500 text-black animate-pulse shadow-md">
+                {clientUnreadChatCount}
+              </span>
+            )}
+          </button>
+
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition"
@@ -975,6 +1038,36 @@ export default function DashboardPage() {
                   <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
                     Live
                   </span>
+                )}
+              </button>
+
+              {/* Tab: Live Chat (WhatsApp-like Real-time) */}
+              <button
+                onClick={() => {
+                  handleTabChange('chat');
+                  setClientUnreadChatCount(0);
+                }}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
+                  activeTab === 'chat'
+                    ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
+                } ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between'}`}
+                title="লাইভ চ্যাট (Live Chat)"
+              >
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="w-4 h-4 shrink-0 text-emerald-400" />
+                  {!sidebarCollapsed && <span>লাইভ চ্যাট</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  clientUnreadChatCount > 0 ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[10px] font-extrabold animate-pulse shadow-sm shadow-emerald-500/20">
+                      {clientUnreadChatCount} নতুন
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
+                      Live
+                    </span>
+                  )
                 )}
               </button>
 
@@ -1148,6 +1241,31 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 min-w-0 bg-black overflow-y-auto p-3.5 sm:p-6 lg:p-8">
+          {/* Super Admin Client Notice Banner (Eye-Catching, Urgent & High Visibility) */}
+          {activeNotice && !noticeDismissed && (
+            <div className="max-w-7xl mx-auto mb-6">
+              <ClientNoticeBanner
+                notice={activeNotice}
+                onDismiss={() => setNoticeDismissed(true)}
+                onActionClick={(link) => {
+                  if (link && link.includes('tab=')) {
+                    const tab = link.split('tab=')[1];
+                    handleTabChange(tab);
+                  } else if (link) {
+                    router.push(link);
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB: LIVE CHAT */}
+          {activeTab === 'chat' && (
+            <div className="space-y-6 max-w-7xl mx-auto animate-fadeIn">
+              <ClientLiveChat currentUser={currentUser} />
+            </div>
+          )}
+
           {/* TAB 0: DASHBOARD OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">

@@ -8,6 +8,7 @@ import SuperAdminBar from '@/components/SuperAdminBar';
 import AuditReportView from '@/components/AuditReportView';
 import AuditFormModal from '@/components/AuditFormModal';
 import ClientDetailsModal from '@/components/admin/ClientDetailsModal';
+import ClientNoticeModal from '@/components/admin/ClientNoticeModal';
 import {
   ShieldCheck,
   Building,
@@ -23,6 +24,7 @@ import {
   Users,
   FileSpreadsheet,
   UserCheck,
+  Bell,
   Megaphone,
   Heart,
   Clock,
@@ -113,6 +115,8 @@ export default function AdminPage() {
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [viewClientModal, setViewClientModal] = useState(null);
+  const [noticeModalClient, setNoticeModalClient] = useState(null);
+  const [adminUnreadChatCount, setAdminUnreadChatCount] = useState(0);
 
   // Dynamic Services state
   const [services, setServices] = useState([]);
@@ -466,6 +470,26 @@ export default function AdminPage() {
       adminMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [selectedAdminTicket?.messages?.length]);
+
+  // Real-time automatic background polling for Live Chat Hub unread count
+  const refreshAdminChatCount = useCallback(async () => {
+    if (currentUser?.role !== 'super_admin') return;
+    try {
+      const res = await fetch('/api/chat?action=unread_total');
+      const data = await res.json();
+      if (data.success) {
+        setAdminUnreadChatCount(data.unreadCount || 0);
+      }
+    } catch (e) {
+      // silent
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    refreshAdminChatCount();
+    const interval = setInterval(refreshAdminChatCount, 8000);
+    return () => clearInterval(interval);
+  }, [refreshAdminChatCount]);
 
   const handleUpdateTicketStatus = async (id, status) => {
     try {
@@ -1365,6 +1389,39 @@ export default function AdminPage() {
               )
             )}
           </button>
+
+          {/* Option: Live Chat Hub */}
+          <Link
+            href="/admin/chat"
+            className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border bg-zinc-900/60 text-zinc-300 hover:bg-zinc-900 hover:text-white border-zinc-850 ${
+              adminSidebarCollapsed ? 'md:justify-center md:p-3' : 'justify-between'
+            }`}
+            title="লাইভ চ্যাট হাব (Live Chat Hub)"
+          >
+            <div className="flex items-center gap-2.5">
+              <MessageSquare className="w-4 h-4 shrink-0 text-emerald-400" />
+              {!adminSidebarCollapsed && (
+                <div className="text-left">
+                  <span className="block">লাইভ চ্যাট হাব</span>
+                  <span className="text-[10px] font-normal block text-zinc-500">
+                    Real-time WhatsApp Chat
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {!adminSidebarCollapsed && (
+              adminUnreadChatCount > 0 ? (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-black animate-pulse shadow-sm">
+                  {adminUnreadChatCount} নতুন
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-emerald-400 border border-zinc-700">
+                  Live
+                </span>
+              )
+            )}
+          </Link>
 
           {/* Option 3: Orders & Consultations */}
           <button
@@ -3057,7 +3114,7 @@ export default function AdminPage() {
                               </span>
                             </td>
                             <td className="p-4 text-right">
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   onClick={() => setViewClientModal(client)}
                                   className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
@@ -3066,26 +3123,46 @@ export default function AdminPage() {
                                   <Eye className="w-3.5 h-3.5" />
                                   <span>View</span>
                                 </button>
+
+                                <button
+                                  onClick={() => setNoticeModalClient(client)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                                  title="ক্লায়েন্টের জন্য নোটিশ পাঠান বা এডিট করুন"
+                                >
+                                  <Bell className="w-3.5 h-3.5" />
+                                  <span>Notice</span>
+                                </button>
+
+                                <button
+                                  onClick={() => router.push(`/admin/chat?clientId=${client._id}`)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                                  title="ক্লায়েন্টের সাথে রিয়েল-টাইম লাইভ চ্যাট করুন"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                  <span>Chat</span>
+                                </button>
+
                                 {isPending ? (
                                   <button
                                     onClick={() => handleApproveClient(client._id)}
                                     className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
                                   >
-                                    Approve করুন
+                                    Approve
                                   </button>
                                 ) : isSuspended ? (
                                   <button
                                     onClick={() => handleApproveClient(client._id)}
                                     className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs cursor-pointer"
                                   >
-                                    পুনরায় এক্টিভ করুন
+                                    Active
                                   </button>
                                 ) : (
                                   <button
                                     onClick={() => handleSuspendClient(client._id)}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-amber-400 border border-zinc-800 text-xs cursor-pointer"
+                                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-amber-400 border border-zinc-800 text-xs font-medium cursor-pointer"
+                                    title="ক্লায়েন্ট একাউন্ট স্থগিত করুন"
                                   >
-                                    স্থগিত (Suspend)
+                                    Suspend
                                   </button>
                                 )}
 
@@ -5256,6 +5333,18 @@ export default function AdminPage() {
           onDelete={(id) => {
             handleDeleteClient(id);
             setViewClientModal(null);
+          }}
+        />
+      )}
+
+      {/* Client Notice Control Modal */}
+      {noticeModalClient && (
+        <ClientNoticeModal
+          isOpen={!!noticeModalClient}
+          client={noticeModalClient}
+          onClose={() => setNoticeModalClient(null)}
+          onNoticeUpdated={() => {
+            refreshClients();
           }}
         />
       )}
