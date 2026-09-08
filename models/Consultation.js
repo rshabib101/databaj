@@ -54,8 +54,4 @@ const ConsultationSchema = new mongoose.Schema(
   }
 );
 
-if (mongoose.models.Consultation) {
-  delete mongoose.models.Consultation;
-}
-
-export default mongoose.model('Consultation', ConsultationSchema);
+export default mongoose.models.Consultation || mongoose.model('Consultation', ConsultationSchema);

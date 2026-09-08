@@ -46,6 +46,11 @@ const CredentialSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    addedBy: {
+      type: String,
+      enum: ['client', 'admin'],
+      default: 'client',
+    },
   },
   { timestamps: true }
 );

@@ -57,8 +57,4 @@ const AgencyProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-if (mongoose.models.AgencyProfile) {
-  delete mongoose.models.AgencyProfile;
-}
-
-export default mongoose.model('AgencyProfile', AgencyProfileSchema);
+export default mongoose.models.AgencyProfile || mongoose.model('AgencyProfile', AgencyProfileSchema);

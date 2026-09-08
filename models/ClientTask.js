@@ -74,8 +74,4 @@ const ClientTaskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-if (mongoose.models && mongoose.models.ClientTask) {
-  delete mongoose.models.ClientTask;
-}
-
-export default mongoose.model('ClientTask', ClientTaskSchema);
+export default mongoose.models.ClientTask || mongoose.model('ClientTask', ClientTaskSchema);

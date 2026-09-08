@@ -2095,7 +2095,24 @@ export default function DashboardPage() {
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${platInfo.color}`}>
                               {platInfo.label}
                             </span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
+                              {cred.addedBy === 'admin' ? (
+                                <span
+                                  className="text-[10px] font-bold text-amber-300 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/30 font-mono shadow-sm"
+                                  title="সুপার অ্যাডমিন কর্তৃক যুক্তকৃত"
+                                >
+                                  <ShieldCheck className="w-3 h-3 text-amber-400" />
+                                  <span>Admin</span>
+                                </span>
+                              ) : (
+                                <span
+                                  className="text-[10px] font-medium text-zinc-400 flex items-center gap-1 bg-zinc-900 px-2 py-0.5 rounded-md border border-zinc-800"
+                                  title="আপনার কোম্পানি কর্তৃক যুক্তকৃত"
+                                >
+                                  <Building2 className="w-3 h-3 text-zinc-500" />
+                                  <span className="truncate max-w-[100px]">{cred.companyName || 'Client'}</span>
+                                </span>
+                              )}
                               <button
                                 onClick={() => handleOpenCredModal(cred)}
                                 className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"

@@ -48,8 +48,4 @@ const ClientNoticeSchema = new mongoose.Schema(
   }
 );
 
-if (mongoose.models.ClientNotice) {
-  delete mongoose.models.ClientNotice;
-}
-
-export default mongoose.model('ClientNotice', ClientNoticeSchema);
+export default mongoose.models.ClientNotice || mongoose.model('ClientNotice', ClientNoticeSchema);

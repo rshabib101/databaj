@@ -65,8 +65,4 @@ const ClientAdSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-if (mongoose.models.ClientAd) {
-  delete mongoose.models.ClientAd;
-}
-
-export default mongoose.model('ClientAd', ClientAdSchema);
+export default mongoose.models.ClientAd || mongoose.model('ClientAd', ClientAdSchema);

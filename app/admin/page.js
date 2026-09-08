@@ -9,6 +9,7 @@ import AuditReportView from '@/components/AuditReportView';
 import AuditFormModal from '@/components/AuditFormModal';
 import ClientDetailsModal from '@/components/admin/ClientDetailsModal';
 import ClientNoticeModal from '@/components/admin/ClientNoticeModal';
+import ClientCredentialModal from '@/components/admin/ClientCredentialModal';
 import {
   ShieldCheck,
   Building,
@@ -192,6 +193,7 @@ export default function AdminPage() {
   const [adminCredClientFilter, setAdminCredClientFilter] = useState('all');
   const [showAdminPasswordMap, setShowAdminPasswordMap] = useState({});
   const [copiedAdminCredKey, setCopiedAdminCredKey] = useState(null);
+  const [credentialModalClient, setCredentialModalClient] = useState(null);
 
   // Client Tasks state (Task from Client)
   const [adminTasks, setAdminTasks] = useState([]);
@@ -1623,44 +1625,6 @@ export default function AdminPage() {
             )}
           </button>
 
-          {/* Option 8: Client Credentials Vault */}
-          <button
-            onClick={() => {
-              handleTabChange('credentials');
-              setMobileSidebarOpen(false);
-            }}
-            className={`w-full flex items-center p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
-              activeTab === 'credentials'
-                ? 'bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/20'
-                : 'bg-zinc-900/60 text-zinc-300 hover:bg-zinc-900 hover:text-white border-zinc-850'
-            } ${adminSidebarCollapsed ? 'md:justify-center md:p-3' : 'justify-between'}`}
-            title="ক্লায়েন্ট ক্রেডেনশিয়ালস ভল্ট"
-          >
-            <div className="flex items-center gap-2.5">
-              <KeyRound className="w-4 h-4 shrink-0 text-amber-400" />
-              {!adminSidebarCollapsed && (
-                <div className="text-left">
-                  <span className="block">ক্লায়েন্ট ক্রেডেনশিয়ালস ভল্ট</span>
-                  <span className={`text-[10px] font-normal block ${activeTab === 'credentials' ? 'text-black/80 font-medium' : 'text-zinc-500'}`}>
-                    FB BM, Google, Web Logins
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {!adminSidebarCollapsed && (
-              <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                  activeTab === 'credentials'
-                    ? 'bg-black/20 text-black font-bold'
-                    : 'bg-zinc-800 text-amber-400 border border-zinc-700'
-                }`}
-              >
-                {adminCredentials.length} লগইন
-              </span>
-            )}
-          </button>
-
           {/* Option 9: Task from Client */}
           <button
             onClick={() => {
@@ -2233,10 +2197,10 @@ export default function AdminPage() {
                 {/* Footer Action */}
                 <div className="mt-5 pt-3 border-t border-zinc-900 flex items-center justify-between">
                   <button
-                    onClick={() => handleTabChange('credentials')}
+                    onClick={() => handleTabChange('clients')}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors group-hover:translate-x-0.5 cursor-pointer"
                   >
-                    <span>মাস্টার ভল্ট খুলুন</span>
+                    <span>ক্লায়েন্ট এক্সেস দেখুন</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                   <span className="text-[10px] text-zinc-500 font-mono">এনক্রিপ্টেড</span>
@@ -3021,6 +2985,14 @@ export default function AdminPage() {
                           <span>View</span>
                         </button>
                         <button
+                          onClick={() => setCredentialModalClient(client)}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                          title="ক্লায়েন্টের ক্রেডেনশিয়ালস ভল্ট দেখুন ও যোগ করুন"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                          <span>Credential</span>
+                        </button>
+                        <button
                           onClick={() => handleApproveClient(client._id)}
                           className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
                         >
@@ -3054,17 +3026,15 @@ export default function AdminPage() {
                   <thead className="bg-zinc-900/60 text-zinc-400 font-semibold border-b border-zinc-850 uppercase text-[10px] tracking-wider">
                     <tr>
                       <th className="p-4">কোম্পানি ও ক্লায়েন্ট</th>
-                      <th className="p-4">ইমেইল</th>
                       <th className="p-4">ইন্ডাস্ট্রি</th>
                       <th className="p-4">স্ট্যাটাস</th>
-                      <th className="p-4">ক্যাম্পেইন অডিট</th>
                       <th className="p-4 text-right">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
                     {clients.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-zinc-500 text-xs">
+                        <td colSpan={4} className="p-8 text-center text-zinc-500 text-xs">
                           কোনো ক্লায়েন্ট অ্যাকাউন্ট পাওয়া যায়নি।
                         </td>
                       </tr>
@@ -3082,14 +3052,15 @@ export default function AdminPage() {
                                 </div>
                                 <div>
                                   <span className="font-bold text-white block">{client.companyName}</span>
-                                  <span className="text-[11px] text-zinc-500 block">{client.name}</span>
+                                  <span className="text-[11px] text-zinc-400 block">
+                                    {client.name} • <span className="font-mono text-zinc-500">{client.email}</span>
+                                  </span>
                                   {client.phone && (
                                     <span className="font-mono text-[10px] text-zinc-400 block">{client.phone}</span>
                                   )}
                                 </div>
                               </div>
                             </td>
-                            <td className="p-4 font-mono text-zinc-400">{client.email}</td>
                             <td className="p-4 text-zinc-400">{client.industry || 'General'}</td>
                             <td className="p-4">
                               {isPending ? (
@@ -3108,11 +3079,6 @@ export default function AdminPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="p-4 font-mono">
-                              <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300">
-                                {client.campaignCount || 0} টি অডিট
-                              </span>
-                            </td>
                             <td className="p-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
@@ -3122,6 +3088,15 @@ export default function AdminPage() {
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                   <span>View</span>
+                                </button>
+
+                                <button
+                                  onClick={() => setCredentialModalClient(client)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm"
+                                  title="ক্লায়েন্টের ক্রেডেনশিয়ালস ভল্ট দেখুন ও যোগ করুন"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5" />
+                                  <span>Credential</span>
                                 </button>
 
                                 <button
@@ -5345,6 +5320,18 @@ export default function AdminPage() {
           onClose={() => setNoticeModalClient(null)}
           onNoticeUpdated={() => {
             refreshClients();
+          }}
+        />
+      )}
+
+      {/* Client Credentials Vault Modal */}
+      {credentialModalClient && (
+        <ClientCredentialModal
+          isOpen={!!credentialModalClient}
+          client={credentialModalClient}
+          onClose={() => {
+            setCredentialModalClient(null);
+            refreshAdminCredentials();
           }}
         />
       )}

@@ -46,8 +46,4 @@ const SiteSettingsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-if (mongoose.models.SiteSettings) {
-  delete mongoose.models.SiteSettings;
-}
-
-export default mongoose.model('SiteSettings', SiteSettingsSchema);
+export default mongoose.models.SiteSettings || mongoose.model('SiteSettings', SiteSettingsSchema);

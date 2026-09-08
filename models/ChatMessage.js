@@ -74,8 +74,4 @@ const ChatMessageSchema = new mongoose.Schema(
 ChatMessageSchema.index({ conversationId: 1, createdAt: 1 });
 ChatMessageSchema.index({ conversationId: 1, senderRole: 1, isRead: 1 });
 
-if (mongoose.models.ChatMessage) {
-  delete mongoose.models.ChatMessage;
-}
-
-export default mongoose.model('ChatMessage', ChatMessageSchema);
+export default mongoose.models.ChatMessage || mongoose.model('ChatMessage', ChatMessageSchema);

@@ -55,17 +55,36 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { platform, title, accountUrl, username, password, twoFactorInstructions, notes } = body;
+    const { clientId, platform, title, accountUrl, username, password, twoFactorInstructions, notes } = body;
 
     if (!title || !username || !password) {
       return NextResponse.json({ success: false, message: 'শিরোনাম, ইউজারনেম এবং পাসওয়ার্ড আবশ্যক' }, { status: 400 });
     }
 
-    const userDoc = await User.findById(authUser.userId).select('companyName name');
+    let targetUserId = authUser.userId;
+    let companyName = '';
+    let addedBy = 'client';
+
+    if (authUser.role === 'super_admin') {
+      if (!clientId) {
+        return NextResponse.json({ success: false, message: 'ক্লায়েন্ট আইডি প্রদান করুন' }, { status: 400 });
+      }
+      targetUserId = clientId;
+      const targetUser = await User.findById(clientId).select('companyName name');
+      if (!targetUser) {
+        return NextResponse.json({ success: false, message: 'ক্লায়েন্ট খুঁজে পাওয়া যায়নি' }, { status: 404 });
+      }
+      companyName = targetUser.companyName || targetUser.name || 'Client';
+      addedBy = 'admin';
+    } else {
+      const userDoc = await User.findById(authUser.userId).select('companyName name');
+      companyName = userDoc?.companyName || authUser.companyName || 'Unknown Company';
+      addedBy = 'client';
+    }
 
     const credential = await Credential.create({
-      userId: authUser.userId,
-      companyName: userDoc?.companyName || authUser.companyName || 'Unknown Company',
+      userId: targetUserId,
+      companyName,
       platform: platform || 'website_admin',
       title: title.trim(),
       accountUrl: accountUrl ? accountUrl.trim() : '',
@@ -73,6 +92,7 @@ export async function POST(request) {
       password: password.trim(),
       twoFactorInstructions: twoFactorInstructions ? twoFactorInstructions.trim() : '',
       notes: notes ? notes.trim() : '',
+      addedBy,
     });
 
     return NextResponse.json({ success: true, message: 'ক্রেডেনশিয়াল সফলভাবে সংরক্ষিত হয়েছে', credential });
