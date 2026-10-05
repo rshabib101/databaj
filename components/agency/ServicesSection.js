@@ -63,29 +63,29 @@ export default function ServicesSection() {
   };
 
   return (
-    <section id="services" className="py-20 bg-zinc-950 border-b border-zinc-800/80 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="services" className="py-24 bg-zinc-950/80 [html.light_&]:bg-slate-50/60 border-b border-zinc-800/80 [html.light_&]:border-slate-200/80 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Dynamic Agency Services</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 [html.light_&]:text-emerald-700 text-xs font-bold uppercase tracking-wider shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
+            <span>DYNAMIC AGENCY SERVICES</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-white [html.light_&]:text-slate-900 tracking-tight">
             আমরা যেসকল সার্ভিস প্রদান করি
           </h2>
 
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-400 [html.light_&]:text-slate-600 leading-relaxed">
             ওয়েব ডেভেলপমেন্ট থেকে শুরু করে ডিজিটাল মার্কেটিং ও সার্ভার-সাইড ট্র্যাকিং — আপনার ব্যবসার জন্য প্রয়োজনীয় সকল আধুনিক আইটি সলিউশন এক ছাতার নিচে। যেকোনো সার্ভিসের কার্ডে ক্লিক করে বিস্তারিত ও অর্ডার দেখুন:
           </p>
         </div>
 
-        {/* Services Grid (All Cards Are 100% Fully Clickable) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Services Grid (All Cards Are 100% Fully Clickable with Holographic Hover Effects) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
           {loading && services.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-zinc-500 text-sm">
-              সার্ভিসগুলো লোড হচ্ছে...
+            <div className="col-span-full py-16 text-center text-zinc-500 text-sm">
+              <span className="inline-block animate-pulse">সার্ভিসগুলো লোড হচ্ছে...</span>
             </div>
           ) : (
             services.map((svc) => {
@@ -95,16 +95,19 @@ export default function ServicesSection() {
                 <Link
                   key={svc._id || svc.slug}
                   href={`/services/${svc.slug}`}
-                  className="bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 hover:border-emerald-500/50 rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1 shadow-xl hover:shadow-emerald-500/10 relative overflow-hidden cursor-pointer"
+                  className="group relative bg-zinc-900/70 [html.light_&]:bg-white hover:bg-zinc-900 [html.light_&]:hover:bg-slate-50 border border-zinc-800/80 [html.light_&]:border-slate-200/90 hover:border-emerald-500/50 [html.light_&]:hover:border-emerald-500 rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 shadow-xl hover:shadow-2xl hover:shadow-emerald-500/15 overflow-hidden cursor-pointer"
                 >
-                  <div className="space-y-4">
+                  {/* Subtle Top Accent Glow on Card Hover */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  <div className="space-y-5">
                     {/* Icon & Badge */}
                     <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/5">
+                      <div className="w-13 h-13 rounded-2xl bg-emerald-500/10 [html.light_&]:bg-emerald-50 border border-emerald-500/25 text-emerald-400 [html.light_&]:text-emerald-700 flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all">
                         <IconComp className="w-6 h-6" />
                       </div>
                       {svc.badge && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-800/80 [html.light_&]:bg-slate-100 text-zinc-300 [html.light_&]:text-slate-700 border border-zinc-700/80 [html.light_&]:border-slate-200">
                           {svc.badge}
                         </span>
                       )}
@@ -112,21 +115,21 @@ export default function ServicesSection() {
 
                     {/* Title & Description */}
                     <div>
-                      <h3 className="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-white [html.light_&]:text-slate-900 group-hover:text-emerald-400 [html.light_&]:group-hover:text-emerald-600 transition-colors flex items-center justify-between">
                         <span>{svc.title}</span>
-                        <ArrowRight className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0" />
+                        <ArrowRight className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all shrink-0" />
                       </h3>
-                      <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                      <p className="text-xs text-zinc-400 [html.light_&]:text-slate-600 mt-2.5 leading-relaxed">
                         {svc.shortDescription}
                       </p>
                     </div>
 
                     {/* Features checklist */}
                     {svc.features && svc.features.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-zinc-800/80">
+                      <div className="space-y-2 pt-3 border-t border-zinc-800/80 [html.light_&]:border-slate-200">
                         {svc.features.map((feat, i) => (
-                          <div key={i} className="flex items-start gap-2 text-xs text-zinc-300">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                          <div key={i} className="flex items-start gap-2 text-xs text-zinc-300 [html.light_&]:text-slate-700">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 [html.light_&]:text-emerald-600 shrink-0 mt-0.5" />
                             <span>{feat}</span>
                           </div>
                         ))}
@@ -135,16 +138,16 @@ export default function ServicesSection() {
                   </div>
 
                   {/* Bottom Action Area */}
-                  <div className="pt-6 mt-6 border-t border-zinc-800/80 flex items-center justify-between">
-                    <span className="text-[11px] text-zinc-500 font-mono flex items-center gap-1">
+                  <div className="pt-6 mt-6 border-t border-zinc-800/80 [html.light_&]:border-slate-200 flex items-center justify-between">
+                    <span className="text-[11px] text-zinc-500 [html.light_&]:text-slate-500 font-mono flex items-center gap-1">
                       <span>বিস্তারিত দেখুন</span>
-                      <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+                      <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 [html.light_&]:group-hover:text-emerald-600 transition-colors" />
                     </span>
 
                     <button
                       type="button"
                       onClick={(e) => handleOpenConsultation(svc, e)}
-                      className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      className="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-emerald-500/10 [html.light_&]:bg-emerald-50 hover:bg-emerald-500 [html.light_&]:hover:bg-emerald-600 text-emerald-400 [html.light_&]:text-emerald-700 hover:text-black [html.light_&]:hover:text-white border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>অর্ডার / কনসালটেশন</span>

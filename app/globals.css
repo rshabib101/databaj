@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: #020617;
+  --foreground: #f8fafc;
 }
 
 html.dark,
 html[data-theme="dark"] {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: #020617;
+  --foreground: #f8fafc;
   color-scheme: dark;
 }
 
@@ -31,37 +31,202 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
+  position: relative;
 }
 
-/* Light Mode Comprehensive Theme Adapters */
+/* ========================================================
+   CYBER & TECH ANIMATIONS & BACKGROUND PATTERNS
+   ======================================================== */
+.bg-tech-grid {
+  background-image: 
+    radial-gradient(rgba(16, 185, 129, 0.15) 1px, transparent 1px),
+    radial-gradient(rgba(6, 182, 212, 0.12) 1px, transparent 1px);
+  background-size: 32px 32px, 64px 64px;
+  background-position: 0 0, 16px 16px;
+}
+
+html.light .bg-tech-grid {
+  background-image: 
+    radial-gradient(rgba(5, 150, 105, 0.18) 1.2px, transparent 1.2px),
+    radial-gradient(rgba(2, 132, 199, 0.14) 1.2px, transparent 1.2px);
+  background-size: 32px 32px, 64px 64px;
+  background-position: 0 0, 16px 16px;
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-1deg);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes radar-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes scan-horizontal {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite 2s;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 7s ease-in-out infinite 1s;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 5s ease-in-out infinite;
+}
+
+.animate-radar-ping {
+  animation: radar-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-scan-line {
+  animation: scan-horizontal 3.5s ease-in-out infinite;
+}
+
+/* High-Tech Card Hover */
+.tech-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(16px);
+}
+
+.tech-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 35px -10px rgba(16, 185, 129, 0.18),
+              0 0 25px -5px rgba(6, 182, 212, 0.15);
+}
+
+/* =========================================================================
+   LIGHT MODE: COMPREHENSIVE LUXURY DESIGN SYSTEM FOR ALL ADMIN & AGENCY CARDS
+   ========================================================================= */
 html.light body {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
-/* Light mode background mappings */
-html.light .bg-black,
-html.light .bg-black\/80,
-html.light .bg-black\/60,
-html.light .bg-black\/50,
-html.light .bg-black\/40 {
+/* 1. Reset all dark gradient card backgrounds into clean, luminous white cards */
+html.light [class*="bg-gradient-to-b"].from-zinc-900,
+html.light [class*="bg-gradient-to-b"].from-zinc-900\/90,
+html.light [class*="bg-gradient-to-b"].from-zinc-950,
+html.light [class*="bg-gradient-to-b"].from-zinc-950\/90,
+html.light [class*="bg-gradient-to-b"].from-black,
+html.light [class*="bg-gradient-to-br"].from-zinc-900,
+html.light [class*="bg-gradient-to-br"].from-zinc-950,
+html.light [class*="bg-gradient-to-br"].from-black,
+html.light [class*="bg-gradient-to-r"].from-zinc-900,
+html.light [class*="bg-gradient-to-tr"].from-zinc-900 {
+  background-image: none !important;
   background-color: #ffffff !important;
 }
 
-html.light .bg-zinc-950,
-html.light .bg-zinc-950\/80,
+/* Top Command Center Hero Banner in Light Mode */
+html.light .bg-gradient-to-br.from-zinc-900.via-zinc-950.to-black {
+  background-image: linear-gradient(135deg, #ffffff 0%, #f8fafc 60%, #f1f5f9 100%) !important;
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03) !important;
+}
+
+/* 2. Base Background Elements */
+html.light .bg-black {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-black\/95,
+html.light .bg-black\/90,
+html.light .bg-black\/80 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-black\/60 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.light .bg-black\/40 {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-zinc-950 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-zinc-950\/95,
+html.light .bg-zinc-950\/90,
+html.light .bg-zinc-950\/80 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-zinc-950\/70,
 html.light .bg-zinc-950\/60 {
   background-color: #f8fafc !important;
 }
 
-html.light .bg-zinc-900,
+html.light .bg-zinc-900 {
+  background-color: #ffffff !important;
+}
+
 html.light .bg-zinc-900\/90,
 html.light .bg-zinc-900\/80,
-html.light .bg-zinc-900\/70,
+html.light .bg-zinc-900\/70 {
+  background-color: #ffffff !important;
+}
+
 html.light .bg-zinc-900\/60,
 html.light .bg-zinc-900\/50,
 html.light .bg-zinc-900\/40 {
-  background-color: #ffffff !important;
+  background-color: #f8fafc !important;
 }
 
 html.light .bg-zinc-850,
@@ -69,7 +234,7 @@ html.light .bg-zinc-800 {
   background-color: #f1f5f9 !important;
 }
 
-/* Light mode border styling */
+/* 3. Card Borders, Inner Dividing Lines & Shadowing */
 html.light .border-zinc-950,
 html.light .border-zinc-900,
 html.light .border-zinc-850,
@@ -77,23 +242,100 @@ html.light .border-zinc-800,
 html.light .border-zinc-800\/90,
 html.light .border-zinc-800\/80,
 html.light .border-zinc-800\/60,
-html.light .border-zinc-700 {
+html.light .border-zinc-700,
+html.light .divide-zinc-950,
+html.light .divide-zinc-900,
+html.light .divide-zinc-900\/60,
+html.light .divide-zinc-850,
+html.light .divide-zinc-800 {
   border-color: #e2e8f0 !important;
 }
 
-/* Light mode typography & high contrast text */
+/* Premium Card Depth */
+html.light .rounded-3xl.border,
+html.light .rounded-2xl.border,
+html.light [class*="rounded-3xl"][class*="border"],
+html.light [class*="rounded-2xl"][class*="border"] {
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+}
+
+/* Hover lift and glow for cards in light mode */
+html.light .rounded-3xl.group:hover,
+html.light .rounded-2xl.group:hover,
+html.light [class*="rounded-3xl"]:hover,
+html.light [class*="rounded-2xl"]:hover {
+  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+}
+
+/* Progress bar background tracks in cards */
+html.light .bg-zinc-900.rounded-full,
+html.light .bg-zinc-800.rounded-full,
+html.light .bg-zinc-950.rounded-full {
+  background-color: #e2e8f0 !important;
+}
+
+/* 4. Left Sidebar in Light Mode */
+html.light aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 4px 0 24px 0 rgba(15, 23, 42, 0.04) !important;
+}
+
+html.light aside button.bg-zinc-900\/60,
+html.light aside a.bg-zinc-900\/60,
+html.light aside .bg-zinc-900 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+html.light aside button.bg-zinc-900\/60:hover,
+html.light aside a.bg-zinc-900\/60:hover,
+html.light aside .bg-zinc-900:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Active tab button in light mode */
+html.light aside button.bg-emerald-500,
+html.light aside a.bg-emerald-500 {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border-color: #047857 !important;
+  box-shadow: 0 4px 14px 0 rgba(5, 150, 105, 0.3) !important;
+}
+
+html.light aside button.bg-emerald-500 *,
+html.light aside a.bg-emerald-500 * {
+  color: #ffffff !important;
+}
+
+/* Sticky Header in Admin in Light Mode */
+html.light .sticky.bg-zinc-950\/90,
+html.light .sticky.bg-zinc-950 {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* 5. Typography & High Crisp Contrast */
 html.light .text-white {
   color: #0f172a !important;
 }
 
 html.light .text-zinc-100,
-html.light .text-zinc-200,
-html.light .text-zinc-300 {
+html.light .text-zinc-200 {
   color: #1e293b !important;
 }
 
+html.light .text-zinc-300 {
+  color: #334155 !important;
+}
+
 html.light .text-zinc-400 {
-  color: #334155 !important; /* Slate-700 for high crisp contrast on white */
+  color: #475569 !important; /* Slate-600 */
 }
 
 html.light .text-zinc-500 {
@@ -104,89 +346,133 @@ html.light .text-zinc-600 {
   color: #64748b !important;
 }
 
-/* Neon accents adjusted for light mode legibility */
+/* Monospace numbers in light mode */
+html.light .font-mono.text-white {
+  color: #0f172a !important;
+}
+
+/* 6. Iconic Colored Badges & Pods (Vibrant Pastel Containers with Rich Contrast) */
+html.light .bg-emerald-500\/20,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/10 {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light .bg-emerald-500\/20 *,
+html.light .bg-emerald-500\/15 *,
+html.light .bg-emerald-500\/10 * {
+  color: #047857 !important;
+}
+
+html.light .bg-purple-500\/20,
+html.light .bg-purple-500\/15,
+html.light .bg-purple-500\/10 {
+  background-color: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border-color: #d8b4fe !important;
+}
+
+html.light .bg-purple-500\/20 *,
+html.light .bg-purple-500\/15 *,
+html.light .bg-purple-500\/10 * {
+  color: #6b21a8 !important;
+}
+
+html.light .bg-blue-500\/20,
+html.light .bg-blue-500\/15,
+html.light .bg-blue-500\/10 {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light .bg-blue-500\/20 *,
+html.light .bg-blue-500\/15 *,
+html.light .bg-blue-500\/10 * {
+  color: #1d4ed8 !important;
+}
+
+html.light .bg-cyan-500\/20,
+html.light .bg-cyan-500\/15,
+html.light .bg-cyan-500\/10 {
+  background-color: #ecfeff !important;
+  color: #0e7490 !important;
+  border-color: #a5f3fc !important;
+}
+
+html.light .bg-cyan-500\/20 *,
+html.light .bg-cyan-500\/15 *,
+html.light .bg-cyan-500\/10 * {
+  color: #0e7490 !important;
+}
+
+html.light .bg-amber-500\/20,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+html.light .bg-amber-500\/20 *,
+html.light .bg-amber-500\/15 *,
+html.light .bg-amber-500\/10 * {
+  color: #b45309 !important;
+}
+
+html.light .bg-rose-500\/20,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/10 {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light .bg-rose-500\/20 *,
+html.light .bg-rose-500\/15 *,
+html.light .bg-rose-500\/10 * {
+  color: #be123c !important;
+}
+
+/* Standard Badges with bg-zinc-800 */
+html.light .bg-zinc-800 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+/* Text Accent Colors in Light Mode */
 html.light .text-emerald-400 {
-  color: #047857 !important; /* Emerald-700 */
+  color: #047857 !important;
 }
 
 html.light .text-emerald-300 {
-  color: #059669 !important; /* Emerald-600 */
+  color: #059669 !important;
 }
 
 html.light .text-blue-400 {
-  color: #1d4ed8 !important; /* Blue-700 */
+  color: #1d4ed8 !important;
 }
 
 html.light .text-cyan-400 {
-  color: #0e7490 !important; /* Cyan-700 */
+  color: #0e7490 !important;
 }
 
 html.light .text-amber-400 {
-  color: #b45309 !important; /* Amber-700 */
+  color: #b45309 !important;
 }
 
 html.light .text-purple-400 {
-  color: #6d28d9 !important; /* Purple-700 */
+  color: #6d28d9 !important;
 }
 
-html.light .text-pink-400 {
-  color: #be185d !important; /* Pink-700 */
+html.light .text-rose-400 {
+  color: #be123c !important;
 }
 
-/* Badge backgrounds in light mode */
-html.light .bg-emerald-500\/10 {
-  background-color: rgba(16, 185, 129, 0.12) !important;
-}
-
-html.light .bg-blue-500\/10 {
-  background-color: rgba(59, 130, 246, 0.12) !important;
-}
-
-html.light .bg-amber-500\/10 {
-  background-color: rgba(245, 158, 11, 0.15) !important;
-}
-
-html.light .bg-cyan-500\/10 {
-  background-color: rgba(6, 182, 212, 0.12) !important;
-}
-
-html.light .bg-purple-500\/10 {
-  background-color: rgba(168, 85, 247, 0.12) !important;
-}
-
-/* Gradient text adaptation in light mode */
-html.light .bg-gradient-to-r.from-white,
-html.light .bg-gradient-to-r.from-zinc-100 {
-  background-image: linear-gradient(to right, #0f172a, #334155) !important;
-}
-
-/* Buttons that have colored backgrounds must keep their legible text */
-html.light .bg-emerald-500,
-html.light .bg-emerald-400 {
-  color: #022c22 !important;
-  font-weight: 700;
-}
-
-html.light .bg-blue-600,
-html.light .bg-blue-500,
-html.light .bg-indigo-600,
-html.light .bg-violet-600,
-html.light .bg-gradient-to-r.from-emerald-500,
-html.light .bg-gradient-to-tr.from-emerald-500 {
-  color: #ffffff !important;
-}
-
-html.light .bg-blue-600 *,
-html.light .bg-blue-500 *,
-html.light .bg-indigo-600 *,
-html.light button.bg-blue-600,
-html.light a.bg-blue-600,
-html.light button.bg-indigo-600,
-html.light a.bg-indigo-600 {
-  color: #ffffff !important;
-}
-
-/* Inputs & Form Elements */
+/* 7. Inputs, Textareas, Selects */
 html.light input,
 html.light textarea,
 html.light select {
@@ -198,8 +484,8 @@ html.light select {
 html.light input:focus,
 html.light textarea:focus,
 html.light select:focus {
-  border-color: #10b981 !important;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
 }
 
 html.light input::placeholder,
@@ -207,13 +493,30 @@ html.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-/* Shadows and card depth in light mode */
-html.light .shadow-2xl,
-html.light .shadow-xl {
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+/* 8. Table Styling in Light Mode */
+html.light table {
+  background-color: #ffffff !important;
 }
 
-html.light .shadow-inner {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
+html.light th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
 }
 
+html.light td {
+  border-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+html.light tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* 9. Modals in Light Mode */
+html.light .bg-zinc-950.border.rounded-3xl,
+html.light .bg-zinc-950.border.rounded-2xl {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18) !important;
+}

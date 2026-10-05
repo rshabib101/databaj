@@ -67,7 +67,7 @@ export default function FounderSection() {
   }, []);
 
   return (
-    <section className="relative py-24 bg-gradient-to-b from-black via-zinc-950 to-black border-b border-zinc-900 overflow-hidden">
+    <section className="relative py-24 bg-gradient-to-b from-black/60 via-zinc-950/70 to-black/60 [html.light_&]:from-slate-100/60 [html.light_&]:via-white/70 [html.light_&]:to-slate-100/60 border-b border-zinc-900 [html.light_&]:border-slate-200 overflow-hidden backdrop-blur-[2px]">
       {/* Subtle background glow effect */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-10 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -87,17 +87,17 @@ export default function FounderSection() {
           </p>
         </div>
 
-        {/* Founder Card Container */}
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+        {/* Founder Card Container with Cyber Border */}
+        <div className="bg-zinc-900/60 [html.light_&]:bg-white/90 border border-zinc-800/80 [html.light_&]:border-slate-200/90 rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all hover:border-emerald-500/40">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             
             {/* Left: Founder Image & Key Highlight */}
             <div className="lg:col-span-5 flex flex-col items-center">
               <div className="relative group w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80">
-                {/* Decorative border ring */}
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-3xl blur-md opacity-40 group-hover:opacity-75 transition duration-500" />
+                {/* Decorative border ring with animated pulse */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 rounded-3xl blur-md opacity-40 group-hover:opacity-80 transition duration-500 animate-pulse-glow" />
                 
-                <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-zinc-700/80 bg-zinc-950">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-zinc-700/80 [html.light_&]:border-slate-200 bg-zinc-950 shadow-2xl">
                   <Image
                     src={profile.founderImage || DEFAULT_PROFILE.founderImage}
                     alt={profile.founderName}
@@ -109,14 +109,14 @@ export default function FounderSection() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   
                   {/* Floating experience pill */}
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between px-3.5 py-2 rounded-xl bg-black/80 backdrop-blur-md border border-zinc-800">
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between px-3.5 py-2 rounded-xl bg-black/80 [html.light_&]:bg-white/90 backdrop-blur-md border border-zinc-800 [html.light_&]:border-slate-200 shadow-lg">
                     <div className="flex items-center gap-2">
-                      <Award className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-bold text-white">{profile.experienceYears || '৭+ বছর'} অভিজ্ঞতা</span>
+                      <Award className="w-4 h-4 text-emerald-400 [html.light_&]:text-emerald-600" />
+                      <span className="text-xs font-bold text-white [html.light_&]:text-slate-900">{profile.experienceYears || '৭+ বছর'} অভিজ্ঞতা</span>
                     </div>
-                    <span className="flex h-2 w-2 relative">
+                    <span className="flex h-2.5 w-2.5 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                     </span>
                   </div>
                 </div>
@@ -124,21 +124,21 @@ export default function FounderSection() {
 
               {/* Name & Role below image for mobile / centered */}
               <div className="mt-6 text-center">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 [html.light_&]:text-emerald-700 text-xs font-semibold mb-2">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Verified Executive</span>
                 </div>
-                <h3 className="text-2xl font-black text-white">{profile.founderName}</h3>
-                <p className="text-sm text-emerald-400 font-medium mt-0.5">{profile.founderRole}</p>
+                <h3 className="text-2xl font-black text-white [html.light_&]:text-slate-900">{profile.founderName}</h3>
+                <p className="text-sm text-emerald-400 [html.light_&]:text-emerald-600 font-semibold mt-0.5">{profile.founderRole}</p>
                 
                 {/* Social icons */}
-                <div className="flex items-center justify-center gap-3 mt-4 text-zinc-400">
+                <div className="flex items-center justify-center gap-3 mt-4 text-zinc-400 [html.light_&]:text-slate-600">
                   {profile.socials?.linkedin && (
                     <a
                       href={profile.socials.linkedin}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-2 rounded-lg bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition"
+                      className="p-2 rounded-lg bg-zinc-800 [html.light_&]:bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition"
                       aria-label="LinkedIn"
                     >
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ export default function FounderSection() {
                       href={profile.socials.facebook}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-2 rounded-lg bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition"
+                      className="p-2 rounded-lg bg-zinc-800 [html.light_&]:bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition"
                       aria-label="Facebook"
                     >
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -162,7 +162,7 @@ export default function FounderSection() {
                   {profile.socials?.email && (
                     <a
                       href={`mailto:${profile.socials.email}`}
-                      className="p-2 rounded-lg bg-zinc-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition"
+                      className="p-2 rounded-lg bg-zinc-800 [html.light_&]:bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition"
                       aria-label="Email"
                     >
                       <Mail className="w-4 h-4" />
@@ -175,29 +175,29 @@ export default function FounderSection() {
             {/* Right: Message, Quote & Stats */}
             <div className="lg:col-span-7 space-y-6">
               {/* Quote block */}
-              <div className="relative p-6 sm:p-7 rounded-2xl bg-black/40 border border-zinc-800/80">
-                <Quote className="w-10 h-10 text-emerald-500/20 absolute -top-4 -left-3" />
-                <p className="text-lg sm:text-xl font-semibold text-zinc-100 leading-relaxed italic relative z-10">
+              <div className="relative p-6 sm:p-7 rounded-2xl bg-black/40 [html.light_&]:bg-slate-50 border border-zinc-800/80 [html.light_&]:border-slate-200">
+                <Quote className="w-10 h-10 text-emerald-500/20 [html.light_&]:text-emerald-600/20 absolute -top-4 -left-3" />
+                <p className="text-lg sm:text-xl font-semibold text-zinc-100 [html.light_&]:text-slate-800 leading-relaxed italic relative z-10">
                   &ldquo;{profile.founderQuote}&rdquo;
                 </p>
               </div>
 
               {/* Bio message */}
-              <p className="text-zinc-300 text-sm sm:text-base leading-relaxed">
+              <p className="text-zinc-300 [html.light_&]:text-slate-700 text-sm sm:text-base leading-relaxed">
                 {profile.founderBio}
               </p>
 
-              {/* Stats Grid */}
+              {/* Stats Grid with dynamic hover animations */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                 {(profile.stats && profile.stats.length > 0 ? profile.stats : DEFAULT_PROFILE.stats).map((st, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition text-center"
+                    className="p-3.5 rounded-2xl bg-zinc-950/80 [html.light_&]:bg-slate-50 border border-zinc-800/80 [html.light_&]:border-slate-200 hover:border-emerald-500/50 [html.light_&]:hover:border-emerald-500 transition-all duration-300 hover:-translate-y-1 text-center shadow-md group"
                   >
-                    <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">
+                    <div className="text-xl sm:text-2xl font-black text-emerald-400 [html.light_&]:text-emerald-600 font-mono group-hover:scale-105 transition-transform">
                       {st.value}
                     </div>
-                    <div className="text-[11px] sm:text-xs text-zinc-400 font-medium mt-1">
+                    <div className="text-[11px] sm:text-xs text-zinc-400 [html.light_&]:text-slate-600 font-medium mt-1">
                       {st.label}
                     </div>
                   </div>

@@ -1203,7 +1203,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans flex selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen bg-black [html.light_&]:bg-slate-50 text-white [html.light_&]:text-slate-900 font-sans flex selection:bg-emerald-500 selection:text-black">
       {/* 1. PERMANENT LEFT SIDEBAR FOR SUPER ADMIN */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 bg-zinc-950 border-r border-zinc-850 flex flex-col justify-between transition-all duration-300 overflow-hidden ${

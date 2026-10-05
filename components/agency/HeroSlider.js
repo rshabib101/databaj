@@ -122,11 +122,11 @@ export default function HeroSlider() {
       id="hero"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative overflow-hidden bg-gradient-to-b from-zinc-950 via-black to-zinc-950 border-b border-zinc-800/80 py-16 sm:py-24"
+      className="relative overflow-hidden bg-gradient-to-b from-zinc-950/70 via-black/50 to-zinc-950/70 [html.light_&]:from-slate-100/70 [html.light_&]:via-white/50 [html.light_&]:to-slate-100/70 border-b border-zinc-800/80 [html.light_&]:border-slate-200/80 py-16 sm:py-24 backdrop-blur-[2px]"
     >
       {/* Background ambient gradient glow */}
       <div
-        className={`absolute inset-0 bg-gradient-to-tr ${slide.accentGradient} opacity-60 transition-all duration-1000 pointer-events-none`}
+        className={`absolute inset-0 bg-gradient-to-tr ${slide.accentGradient} opacity-50 transition-all duration-1000 pointer-events-none`}
       ></div>
       <div className="absolute top-1/2 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-0 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -136,26 +136,26 @@ export default function HeroSlider() {
           {/* Left Column: Slide Content */}
           <div className="lg:col-span-7 space-y-6">
             {/* Slide Tag */}
-            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-300 backdrop-blur-md ${slide.tagColor}`}>
-              <Zap className="w-3.5 h-3.5" />
+            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-300 backdrop-blur-md shadow-sm ${slide.tagColor}`}>
+              <Zap className="w-3.5 h-3.5 animate-bounce" />
               <span>{slide.tag}</span>
             </div>
 
             {/* Slide Title */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight transition-all duration-500 min-h-[120px] sm:min-h-[150px]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white [html.light_&]:text-slate-900 tracking-tight leading-tight transition-all duration-500 min-h-[120px] sm:min-h-[150px]">
               {slide.title}
             </h1>
 
             {/* Subtitle */}
-            <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl font-normal">
+            <p className="text-sm sm:text-base text-zinc-300 [html.light_&]:text-slate-700 leading-relaxed max-w-2xl font-normal">
               {slide.subtitle}
             </p>
 
             {/* Highlights Grid */}
             <div className="grid grid-cols-2 gap-3 pt-2">
               {slide.highlights.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-xs text-zinc-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div key={idx} className="flex items-center gap-2 text-xs font-medium text-zinc-300 [html.light_&]:text-slate-800 bg-zinc-900/40 [html.light_&]:bg-slate-100/70 p-2 rounded-xl border border-zinc-800/60 [html.light_&]:border-slate-200/80 transition-all hover:border-emerald-500/40">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 [html.light_&]:text-emerald-600 shrink-0" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -165,24 +165,24 @@ export default function HeroSlider() {
             <div className="flex flex-wrap items-center gap-4 pt-4">
               <Link
                 href={slide.primaryCta.href}
-                className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-sm transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-2"
+                className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 [html.light_&]:bg-emerald-600 [html.light_&]:hover:bg-emerald-700 text-black [html.light_&]:text-white font-extrabold text-sm transition-all shadow-xl shadow-emerald-500/25 flex items-center gap-2 group hover:scale-[1.02]"
               >
                 <span>{slide.primaryCta.text}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
               </Link>
 
               {slide.secondaryCta.href === '/login' ? (
                 currentUser ? (
                   <Link
                     href={currentUser.role === 'super_admin' ? '/admin' : '/dashboard'}
-                    className="px-6 py-3.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 hover:text-white font-bold text-sm border border-zinc-700 transition-colors"
+                    className="px-6 py-3.5 rounded-2xl bg-zinc-900/90 [html.light_&]:bg-white hover:bg-zinc-800 [html.light_&]:hover:bg-slate-50 text-zinc-200 [html.light_&]:text-slate-800 hover:text-white font-bold text-sm border border-zinc-700 [html.light_&]:border-slate-300 transition-all shadow-md"
                   >
                     {currentUser.role === 'super_admin' ? 'সুপার অ্যাডমিন প্যানেল' : 'ক্লায়েন্ট ড্যাশবোর্ড'}
                   </Link>
                 ) : (
                   <Link
                     href="/login"
-                    className="px-6 py-3.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 hover:text-white font-bold text-sm border border-zinc-700 transition-colors"
+                    className="px-6 py-3.5 rounded-2xl bg-zinc-900/90 [html.light_&]:bg-white hover:bg-zinc-800 [html.light_&]:hover:bg-slate-50 text-zinc-200 [html.light_&]:text-slate-800 hover:text-white font-bold text-sm border border-zinc-700 [html.light_&]:border-slate-300 transition-all shadow-md"
                   >
                     {slide.secondaryCta.text}
                   </Link>
@@ -191,7 +191,7 @@ export default function HeroSlider() {
                 <button
                   type="button"
                   onClick={(e) => handleOpenConsultation(slide, e)}
-                  className="px-6 py-3.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 hover:text-white font-bold text-sm border border-zinc-700 transition-colors cursor-pointer"
+                  className="px-6 py-3.5 rounded-2xl bg-zinc-900/90 [html.light_&]:bg-white hover:bg-zinc-800 [html.light_&]:hover:bg-slate-50 text-zinc-200 [html.light_&]:text-slate-800 hover:text-white font-bold text-sm border border-zinc-700 [html.light_&]:border-slate-300 transition-all cursor-pointer shadow-md"
                 >
                   {slide.secondaryCta.text}
                 </button>
@@ -199,43 +199,58 @@ export default function HeroSlider() {
             </div>
           </div>
 
-          {/* Right Column: Visual Card Showcase */}
+          {/* Right Column: Visual Card Showcase with Animated Futuristic Border & Floating Tech Chips */}
           <div className="lg:col-span-5 relative">
-            <div className="relative p-8 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl backdrop-blur-xl space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20">
-                  <IconComponent className="w-7 h-7" />
+            {/* Floating Tech Chip 1 */}
+            <div className="absolute -top-4 -left-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/90 [html.light_&]:bg-white border border-emerald-500/40 text-xs font-mono font-bold text-emerald-400 [html.light_&]:text-emerald-700 shadow-xl shadow-emerald-500/10 backdrop-blur-md animate-float-slow">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-radar-ping" />
+              <span>LIVE CLUSTER OK</span>
+            </div>
+
+            {/* Floating Tech Chip 2 */}
+            <div className="absolute -bottom-5 -right-4 z-20 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-900/90 [html.light_&]:bg-white border border-cyan-500/40 text-xs font-mono font-bold text-cyan-400 [html.light_&]:text-cyan-700 shadow-xl shadow-cyan-500/10 backdrop-blur-md animate-float-delayed">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>HIGH ROAS MATRIX</span>
+            </div>
+
+            {/* Main Interactive Holographic Card */}
+            <div className="relative p-1 rounded-3xl bg-gradient-to-tr from-emerald-500/40 via-cyan-500/30 to-purple-500/40 shadow-2xl backdrop-blur-2xl">
+              <div className="relative p-7 sm:p-8 rounded-[22px] bg-zinc-950/90 [html.light_&]:bg-white/95 border border-zinc-800/80 [html.light_&]:border-slate-200 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/25 animate-pulse-glow">
+                    <IconComponent className="w-7 h-7 text-black" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 [html.light_&]:text-slate-500 block">
+                      {slide.stat.label}
+                    </span>
+                    <span className="text-2xl font-black text-emerald-400 [html.light_&]:text-emerald-600">{slide.stat.val}</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 block">
-                    {slide.stat.label}
+
+                <div className="space-y-2">
+                  <span className="text-xs uppercase font-mono tracking-wider text-zinc-400 [html.light_&]:text-slate-500 font-semibold">
+                    DataBaj Core Service
                   </span>
-                  <span className="text-2xl font-black text-emerald-400">{slide.stat.val}</span>
+                  <h3 className="text-xl font-bold text-white [html.light_&]:text-slate-900">{slide.titleHighlight}</h3>
+                  <p className="text-xs text-zinc-400 [html.light_&]:text-slate-600 leading-relaxed">
+                    আমরা শুধু সার্ভিস দিই না, ব্যবসার পরিমাপযোগ্য উন্নতি ও টেকসই গ্রোথ নিশ্চিত করি।
+                  </p>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <span className="text-xs uppercase font-mono tracking-wider text-zinc-400 font-semibold">
-                  DataBaj Core Service
-                </span>
-                <h3 className="text-xl font-bold text-white">{slide.titleHighlight}</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  আমরা শুধু সার্ভিস দিই না, ব্যবসার পরিমাপযোগ্য উন্নতি ও টেকসই গ্রোথ নিশ্চিত করি।
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-black/60 border border-zinc-800/80 text-xs space-y-2 font-mono">
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span>Quality Standard</span>
-                  <span className="text-emerald-400">100% Industry Grade</span>
-                </div>
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span>Support & Monitoring</span>
-                  <span className="text-blue-400">Dedicated 24/7 Team</span>
-                </div>
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span>Dashboard Access</span>
-                  <span className="text-amber-400">Real-time Portal</span>
+                <div className="p-4 rounded-2xl bg-black/60 [html.light_&]:bg-slate-50 border border-zinc-800/80 [html.light_&]:border-slate-200 text-xs space-y-2 font-mono">
+                  <div className="flex items-center justify-between text-zinc-400 [html.light_&]:text-slate-600">
+                    <span>Quality Standard</span>
+                    <span className="text-emerald-400 [html.light_&]:text-emerald-600 font-bold">100% Industry Grade</span>
+                  </div>
+                  <div className="flex items-center justify-between text-zinc-400 [html.light_&]:text-slate-600">
+                    <span>Support & Monitoring</span>
+                    <span className="text-blue-400 [html.light_&]:text-blue-600 font-bold">Dedicated 24/7 Team</span>
+                  </div>
+                  <div className="flex items-center justify-between text-zinc-400 [html.light_&]:text-slate-600">
+                    <span>Dashboard Access</span>
+                    <span className="text-amber-400 [html.light_&]:text-amber-600 font-bold">Real-time Portal</span>
+                  </div>
                 </div>
               </div>
             </div>

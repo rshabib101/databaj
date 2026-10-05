@@ -19,43 +19,50 @@ export default function AgencyFooter() {
       .catch(() => {});
   }, []);
   return (
-    <footer className="bg-black border-t border-zinc-900 py-16 text-zinc-400 text-xs font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-zinc-900">
+    <footer className="bg-black/95 [html.light_&]:bg-slate-50 border-t border-zinc-900 [html.light_&]:border-slate-200 py-16 text-zinc-400 [html.light_&]:text-slate-600 text-xs font-sans relative overflow-hidden">
+      {/* Top glowing accent border */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-zinc-900 [html.light_&]:border-slate-200">
           {/* Col 1: Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center font-black text-white text-lg">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-500 flex items-center justify-center font-black text-white text-lg shadow-md shadow-emerald-500/20">
                 DB
               </div>
-              <span className="font-black text-lg text-white tracking-tight">DataBaj IT Agency</span>
+              <span className="font-black text-lg text-white [html.light_&]:text-slate-900 tracking-tight">DataBaj IT Agency</span>
             </div>
-            <p className="text-zinc-400 leading-relaxed text-xs">
+            <p className="text-zinc-400 [html.light_&]:text-slate-600 leading-relaxed text-xs">
               উচ্চ মানের ফুল-স্ট্যাক ওয়েব ডেভেলপমেন্ট, ডাটা-ড্রিভেন মেটা ও গুগল অ্যাডস মার্কেটিং এবং ১০০% নিখুঁত সার্ভার-সাইড ই-কমার্স ট্র্যাকিং সলিউশন।
             </p>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 [html.light_&]:bg-emerald-50 border border-emerald-500/30 text-emerald-400 [html.light_&]:text-emerald-700 text-[11px] font-mono font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-radar-ping" />
+              <span>SYSTEMS OPERATIONAL • 99.9%</span>
+            </div>
           </div>
 
           {/* Col 2: Services */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs">সার্ভিসেস</h4>
+            <h4 className="text-white [html.light_&]:text-slate-900 font-bold uppercase tracking-wider text-xs">সার্ভিসেস</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/#services" className="hover:text-emerald-400 transition-colors">
+                <Link href="/#services" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   Web Development & SaaS
                 </Link>
               </li>
               <li>
-                <Link href="/#services" className="hover:text-emerald-400 transition-colors">
+                <Link href="/#services" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   Digital Marketing & Meta Ads
                 </Link>
               </li>
               <li>
-                <Link href="/#services" className="hover:text-emerald-400 transition-colors">
+                <Link href="/#services" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   Server-Side GTM & CAPI Tracking
                 </Link>
               </li>
               <li>
-                <Link href="/#auditor" className="hover:text-emerald-400 transition-colors">
+                <Link href="/#auditor" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   Facebook Ads Performance Auditor
                 </Link>
               </li>
@@ -64,25 +71,25 @@ export default function AgencyFooter() {
 
           {/* Col 3: Portal Links */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs">অ্যাক্সেস পোর্টাল</h4>
+            <h4 className="text-white [html.light_&]:text-slate-900 font-bold uppercase tracking-wider text-xs">অ্যাক্সেস পোর্টাল</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/login" className="hover:text-emerald-400 transition-colors">
+                <Link href="/login" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   ইউনিভার্সাল লগইন (Universal Login)
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="hover:text-emerald-400 transition-colors">
+                <Link href="/register" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   নতুন অ্যাকাউন্ট রেজিস্ট্রেশন
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">
+                <Link href="/dashboard" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   ক্লায়েন্ট ড্যাশবোর্ড
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-emerald-400 transition-colors">
+                <Link href="/admin" className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors">
                   সুপার অ্যাডমিন প্যানেল
                 </Link>
               </li>
@@ -91,21 +98,21 @@ export default function AgencyFooter() {
 
           {/* Col 4: Contact */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs">যোগাযোগ</h4>
-            <div className="space-y-2 text-zinc-400">
+            <h4 className="text-white [html.light_&]:text-slate-900 font-bold uppercase tracking-wider text-xs">যোগাযোগ</h4>
+            <div className="space-y-2 text-zinc-400 [html.light_&]:text-slate-600">
               <div className="flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-emerald-400 [html.light_&]:text-emerald-600 shrink-0 mt-0.5" />
                 <span className="leading-snug">{settings.address || 'Dhaka, Bangladesh'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <a href={`mailto:${settings.email}`} className="hover:text-white transition font-mono">
+                <Mail className="w-3.5 h-3.5 text-emerald-400 [html.light_&]:text-emerald-600 shrink-0" />
+                <a href={`mailto:${settings.email}`} className="hover:text-white [html.light_&]:hover:text-slate-900 transition font-mono">
                   {settings.email || 'contact@databaj.com'}
                 </a>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <a href={`tel:${settings.phone?.replace(/[^0-9+]/g, '')}`} className="hover:text-emerald-400 transition font-mono">
+                <Phone className="w-3.5 h-3.5 text-emerald-400 [html.light_&]:text-emerald-600 shrink-0" />
+                <a href={`tel:${settings.phone?.replace(/[^0-9+]/g, '')}`} className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition font-mono">
                   {settings.phone || '+880 1700-000000'}
                 </a>
               </div>
@@ -125,10 +132,10 @@ export default function AgencyFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-zinc-500 text-[11px]">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-zinc-500 [html.light_&]:text-slate-500 text-[11px]">
           <p>© {new Date().getFullYear()} DataBaj IT Agency. All rights reserved.</p>
-          <div className="flex items-center gap-1">
-            <span>Built with precision & high-performance engineering</span>
+          <div className="flex items-center gap-1 font-mono">
+            <span>Powered by Next.js 16 • React 19 • Cloud Architecture</span>
           </div>
         </div>
       </div>

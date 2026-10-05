@@ -17,6 +17,7 @@ export const metadata = {
 };
 
 import { ThemeProvider } from "@/context/ThemeContext";
+import TechBackground from "@/components/agency/TechBackground";
 
 export default function RootLayout({ children }) {
   return (
@@ -25,8 +26,13 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col transition-colors duration-200">
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className="min-h-full flex flex-col transition-colors duration-200 relative selection:bg-emerald-500 selection:text-black">
+        <ThemeProvider>
+          <TechBackground />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            {children}
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

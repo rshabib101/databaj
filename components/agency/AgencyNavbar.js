@@ -23,39 +23,58 @@ export default function AgencyNavbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/80">
+    <header className="sticky top-0 z-40 bg-zinc-950/80 [html.light_&]:bg-white/85 backdrop-blur-xl border-b border-zinc-800/80 [html.light_&]:border-slate-200/80 shadow-lg shadow-black/5 transition-colors">
+      {/* Animated Top Cyber Scanning Line */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-indigo-500 opacity-80" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-blue-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-black text-2xl group-hover:scale-105 transition-transform">
-            DB
+        <Link href="/" className="flex items-center gap-3.5 group">
+          <div className="relative">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-blue-500 blur-sm opacity-60 group-hover:opacity-100 transition duration-300 animate-pulse-glow" />
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-blue-500 flex items-center justify-center text-white font-black text-2xl group-hover:scale-105 transition-transform shadow-md">
+              DB
+            </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-xl tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
+              <span className="font-black text-xl tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 [html.light_&]:from-slate-900 [html.light_&]:to-slate-700 bg-clip-text text-transparent">
                 DataBaj
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                IT Agency
+              <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 [html.light_&]:text-emerald-700 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-radar-ping" />
+                <span>IT AGENCY</span>
               </span>
             </div>
-            <p className="text-[11px] text-zinc-400 font-medium">
+            <p className="text-[11px] text-zinc-400 [html.light_&]:text-slate-600 font-medium">
               Web Development • Marketing • Tracking
             </p>
           </div>
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-300">
-          <Link href="/#services" className="hover:text-emerald-400 transition-colors">
-            সার্ভিসেস (Services)
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-300 [html.light_&]:text-slate-700">
+          <Link
+            href="/#services"
+            className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors relative py-1 group"
+          >
+            <span>সার্ভিসেস (Services)</span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-400 transition-all duration-300 group-hover:w-full" />
           </Link>
-          <Link href="/#auditor" className="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+          <Link
+            href="/#auditor"
+            className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors flex items-center gap-1.5 relative py-1 group"
+          >
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            মেটা অ্যাডস অডিটর
+            <span>মেটা অ্যাডস অডিটর</span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-400 transition-all duration-300 group-hover:w-full" />
           </Link>
-          <Link href="/#why-us" className="hover:text-emerald-400 transition-colors">
-            কেন আমরা?
+          <Link
+            href="/#why-us"
+            className="hover:text-emerald-400 [html.light_&]:hover:text-emerald-600 transition-colors relative py-1 group"
+          >
+            <span>কেন আমরা?</span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-400 transition-all duration-300 group-hover:w-full" />
           </Link>
         </nav>
 
@@ -64,15 +83,17 @@ export default function AgencyNavbar() {
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition cursor-pointer"
+            className="p-2.5 rounded-xl bg-zinc-900/90 [html.light_&]:bg-slate-100 border border-zinc-800 [html.light_&]:border-slate-200 text-zinc-300 [html.light_&]:text-slate-700 hover:text-white [html.light_&]:hover:text-slate-900 hover:border-emerald-500/40 transition cursor-pointer shadow-sm relative group overflow-hidden"
             title={theme === 'dark' ? 'লাইট মোডে পরিবর্তন করুন' : 'ডার্ক মোডে পরিবর্তন করুন'}
             aria-label="Toggle Theme"
           >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-blue-500" />
-            )}
+            <div className="relative z-10 transition-transform duration-500 group-hover:rotate-180">
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-blue-600" />
+              )}
+            </div>
           </button>
 
           {currentUser ? (
